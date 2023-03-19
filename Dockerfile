@@ -15,7 +15,7 @@ WORKDIR /usr/src/app
 # 复制 package.json 和 package-lock.json 文件
 COPY package*.json /usr/src/app/
 
-RUN RUN npm i -g pnpm --registry=https://registry.npm.taobao.org
+RUN npm i -g pnpm --registry=https://registry.npm.taobao.org
 
 ## Install production dependencies.
 ## 以 production 形式安装依赖
