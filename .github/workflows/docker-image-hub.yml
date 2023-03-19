@@ -30,4 +30,4 @@ jobs:
               username: ${{ secrets.USERNAME }}
               password: ${{ secrets.PASSWORD }}
               port: 22
-              script: cd ~/deploy/ && sh deploy-by-dockerhub.sh ${{ secrets.DOCKER_USERNAME }} ${{ secrets.DOCKER_PASSWORD }}
+              script: cd ~/deploy/ && sh deploy-yuque-dockerhub.sh ${{ secrets.DOCKER_USERNAME }} ${{ secrets.DOCKER_PASSWORD }}
