@@ -19,5 +19,5 @@ echo -e "---------创建容器并运行容器--------"
 # -p: 端口映射，本机端口:容器端口
 # --name: 指定容器名称
 # 最后一个为镜像名称
-docker run --rm -d -p 3003:3003 --name yuque-app forguo/yuque:latest
+docker run --rm -d -p 3000:3000 --name yuque-app forguo/yuque:latest
 echo -e "---------运行成功--------"
