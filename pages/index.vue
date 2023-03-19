@@ -73,9 +73,10 @@
 import { Timer } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
-import { onBeforeMount, ref } from 'vue'
+import { onBeforeMount, ref, unref } from 'vue'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
+import { useCookie, useRouter } from 'nuxt/app'
 import request from '~/plugin/request.app'
 
 // 知识库
@@ -182,8 +183,17 @@ const fileZip = (list: any[]) => {
         })
 }
 
+const router = useRouter()
+
 onBeforeMount(() => {
-    reposList()
+    const token = useCookie('yuque_token')
+    if (!token.value) {
+        router.push({
+            path: 'login'
+        })
+    } else {
+        reposList()
+    }
 })
 </script>
 <style scoped lang="scss">
