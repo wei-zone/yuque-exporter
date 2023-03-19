@@ -24,24 +24,12 @@
 <script setup>
 import 'normalize.css/normalize.css'
 import { useCookie, useRoute, useRouter } from 'nuxt/app'
-import { onBeforeMount, ref, unref } from 'vue'
 const route = useRoute()
 const router = useRouter()
-const loading = ref(true)
-
-onBeforeMount(() => {
-    console.log(unref(route))
-    const token = useCookie('yuque_token')
-    if (!token.value && unref(route).name !== 'login') {
-        router.push({
-            path: 'login'
-        })
-    }
-    loading.value = false
-})
 
 // 退出登录
 const login = () => {
+    const token = useCookie('yuque_token')
     // 清空token
     token.value = ''
     router.push({

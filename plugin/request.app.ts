@@ -4,7 +4,7 @@
  * @Description: request.ts.js
  */
 
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import { unref } from 'vue'
 import { useCookie } from 'nuxt/app'
@@ -30,7 +30,7 @@ request.interceptors.response.use(
         ElMessage.error(res.data?.message || res.statusText || '服务异常，请重试')
         return Promise.reject(res)
     },
-    (e: AxiosError) => {
+    (e: any) => {
         console.log('request.e -->')
         console.log(e)
         ElMessage.error(

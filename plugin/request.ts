@@ -4,7 +4,7 @@
  * @Description: request.ts.js
  */
 
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 const request = axios.create({
     baseURL: 'https://www.yuque.com/api/v2/'
 })
@@ -21,7 +21,7 @@ request.interceptors.response.use(
         console.log('AxiosResponse -->')
         return Promise.reject(res)
     },
-    (e: AxiosError) => {
+    (e: any) => {
         console.log('AxiosError -->')
         console.log(e)
         return Promise.reject(e)

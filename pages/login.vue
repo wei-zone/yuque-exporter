@@ -41,7 +41,7 @@ const form = reactive({
 
 // 登录
 const login = () => {
-    const token = useCookie('yuque_token')
+    const token: any = useCookie('yuque_token')
     // 保存token到cookie
     token.value = form.token || import.meta.env.VITE_TOKEN || ''
     router.push({

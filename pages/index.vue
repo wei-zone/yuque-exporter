@@ -59,10 +59,8 @@
                 </template>
             </el-table-column>
             <el-table-column label="操作" align="center" width="120">
-                <template #default="scope">
-                    <el-button type="primary" size="small" @click="handleExport(scope.$index, scope.row)">
-                        导出
-                    </el-button>
+                <template #default>
+                    <el-button type="primary" size="small">导出</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -73,7 +71,7 @@
 import { Timer } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
-import { onBeforeMount, ref } from 'vue'
+import { onBeforeMount, Ref, ref } from 'vue'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import { useCookie, useRouter } from 'nuxt/app'
@@ -100,10 +98,10 @@ interface Doc {
 }
 
 // 当前知识库路径
-const namespace = ref<String>('')
-const reposData = ref<Repo[]>([])
-const tableData = ref<Doc[]>([])
-const tableLoading = ref<Boolean>(true)
+const namespace: Ref<String> = ref('')
+const reposData: Ref<Repo[]> = ref([])
+const tableData: Ref<Doc[]> = ref([])
+const tableLoading: Ref<boolean> = ref(true)
 // 选中文档库
 const multipleSelection = ref<string[]>([])
 
@@ -145,10 +143,9 @@ const docList = async (namespace: string) => {
 }
 
 // 批量导出
-const handleExport = async (index: number, row: Doc) => {
+const handleExport = async () => {
     try {
         tableLoading.value = true
-        console.log(index, row)
         const docs = multipleSelection.value.map(slug => {
             return request(`/export?slug=${slug}&namespace=${namespace.value}`)
         })
