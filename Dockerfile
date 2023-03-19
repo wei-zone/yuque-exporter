@@ -5,7 +5,7 @@
 FROM node:14.19-alpine as build
 
 ## 定义工作目录
-WORKDIR /
+WORKDIR /app
 
 ## Copy application dependency manifests to the container image.
 ## A wildcard is used to ensure both package.json AND package-lock.json are copied.
