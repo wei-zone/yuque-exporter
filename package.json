@@ -32,7 +32,8 @@
         "file-saver": "^2.0.5",
         "jszip": "^3.10.1",
         "normalize.css": "^8.0.1",
-        "sass": "^1.59.3"
+        "sass": "^1.59.3",
+        "vue": "^3.2.47"
     },
     "config": {
         "commitizen": {
