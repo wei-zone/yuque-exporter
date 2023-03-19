@@ -28,7 +28,7 @@ COPY . /usr/src/app/
 ## 设置node的时区了 可能时间较长，耐心等待
 # RUN apk update && apk add bash tzdata \ && cp -r -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-## 将3003端口暴露出来
+## 将3000端口暴露出来
 EXPOSE 3000
 
 ## 2、Run the web service on container startup.
