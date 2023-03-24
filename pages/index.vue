@@ -23,7 +23,7 @@
                 type="primary"
                 :disabled="!multipleSelection.length"
                 :loading="tableLoading"
-                @click="handleExport"
+                @click="handleExportMultiple"
             >
                 批量导出
             </el-button>
@@ -59,8 +59,8 @@
                 </template>
             </el-table-column>
             <el-table-column label="操作" align="center" width="120">
-                <template #default>
-                    <el-button type="primary" size="small">导出</el-button>
+                <template #default="scope">
+                    <el-button type="primary" size="small" @click="handleExportSingle(scope.row.slug)">导出</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -76,6 +76,7 @@ import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import { useCookie, useRouter } from 'nuxt/app'
 import request from '~/plugin/request.app'
+const router = useRouter()
 
 // 知识库
 interface Repo {
@@ -108,7 +109,6 @@ const multipleSelection = ref<string[]>([])
 // 选中
 const handleSelectionChange = (val: Doc[]) => {
     multipleSelection.value = val.map(item => item.slug)
-    console.log(multipleSelection.value)
 }
 
 // 获取知识库列表
@@ -142,14 +142,22 @@ const docList = async (namespace: string) => {
     }
 }
 
+const handleExportSingle = slug => {
+    handleExport([slug])
+}
+
+const handleExportMultiple = () => {
+    handleExport(multipleSelection.value)
+}
+
 // 批量导出
-const handleExport = async () => {
+const handleExport = async docs => {
     try {
         tableLoading.value = true
-        const docs = multipleSelection.value.map(slug => {
+        const requests = docs.map(slug => {
             return request(`/export?slug=${slug}&namespace=${namespace.value}`)
         })
-        const res = await Promise.all(docs)
+        const res = await Promise.all(requests)
         fileZip(res)
     } catch (e) {
         tableLoading.value = false
@@ -179,8 +187,6 @@ const fileZip = (list: any[]) => {
             tableLoading.value = false
         })
 }
-
-const router = useRouter()
 
 onBeforeMount(() => {
     const token = useCookie('yuque_token')
