@@ -9,12 +9,22 @@ import { request } from '~/plugin'
 export default defineEventHandler(async event => {
     try {
         const headers = getHeaders(event)
+        // 获取当前登录用户信息
+        const user = await request({
+            headers: {
+                'x-auth-token': headers['x-auth-token'],
+                'user-agent': headers['user-agent']
+            },
+            url: '/user',
+            method: 'get'
+        })
+        const { login } = user.data
         const res = await request({
             headers: {
                 'x-auth-token': headers['x-auth-token'],
                 'user-agent': headers['user-agent']
             },
-            url: '/users/forguo/repos',
+            url: `/users/${login}/repos`,
             method: 'get'
         })
         return {
