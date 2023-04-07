@@ -21,6 +21,9 @@ RUN npm i -g pnpm --registry=https://registry.npm.taobao.org
 ## 以 production 形式安装依赖
 RUN pnpm install --shamefully-hoist
 
+## 打包
+RUN pnpm build
+
 ## Copy local code to the container image.
 ## 将本地代码复制到工作目录内
 COPY . /usr/src/app/
@@ -33,4 +36,4 @@ EXPOSE 3000
 
 ## 2、Run the web service on container startup.
 ## 启动服务
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "server"]

@@ -24,11 +24,11 @@
 <script setup lang="ts">
 import 'normalize.css/normalize.css'
 import { useRoute, useRouter } from 'nuxt/app'
-import { onBeforeMount, Ref, ref } from 'vue'
+import { onBeforeMount, ref } from 'vue'
 import consola from 'consola'
 const route = useRoute()
 const router = useRouter()
-const loading: Ref<Boolean> = ref(true)
+const loading = ref<boolean>(true)
 
 onBeforeMount(() => {
     const token = window.localStorage.getItem('yuque_token')

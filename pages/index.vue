@@ -9,7 +9,7 @@
         <div class="page-control">
             <el-form label-width="auto" :label-position="'left'">
                 <el-form-item label="知识库：" style="margin-bottom: 0">
-                    <el-select v-model="namespace" placeholder="请选择" filterable @change="getDocs">
+                    <el-select v-model="namespace" placeholder="请选择" filterable @change="getDocList">
                         <el-option
                             v-for="item in reposData"
                             :key="item.namespace"
@@ -73,9 +73,10 @@ import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { onBeforeMount, Ref, ref } from 'vue'
 import JSZip from 'jszip'
-import { saveAs } from 'file-saver'
+import pkg from 'file-saver'
 import consola from 'consola'
 import request from '~/plugin/request.app'
+const saveAs: any = pkg.saveAs
 
 // 知识库
 interface Repo {
@@ -101,7 +102,7 @@ interface Doc {
 const namespace: Ref<String> = ref('')
 const reposData: Ref<Repo[]> = ref([])
 const tableData: Ref<Doc[]> = ref([])
-const tableLoading: Ref<Boolean> = ref(true)
+const tableLoading = ref<boolean>(true)
 // 选中文档库
 const multipleSelection = ref<string[]>([])
 
@@ -135,7 +136,7 @@ const getDocList = async (value: string) => {
     }
 }
 
-const handleExportSingle = slug => {
+const handleExportSingle = (slug: string) => {
     handleExport([slug])
 }
 
@@ -144,10 +145,10 @@ const handleExportMultiple = () => {
 }
 
 // 批量导出
-const handleExport = async docs => {
+const handleExport = async (docs: string[]) => {
     try {
         tableLoading.value = true
-        const requests = docs.map(slug => {
+        const requests = docs.map((slug: string) => {
             return request(`/export?slug=${slug}&namespace=${namespace.value}`)
         })
         const res = await Promise.all(requests)
