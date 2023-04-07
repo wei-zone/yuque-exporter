@@ -111,29 +111,23 @@ const handleSelectionChange = (val: Doc[]) => {
 }
 
 // 获取知识库列表
-const reposList = async () => {
+const getReposList = async () => {
     try {
         tableLoading.value = true
         const { data } = await request('/repos')
         reposData.value = data
-        namespace.value = data[0].namespace
-        await docList(data[0].namespace)
+        await getDocList(data[0].namespace)
     } catch (e: any) {
         tableLoading.value = false
     }
 }
 
-// 获取知识库文档
-const getDocs = async (e: string) => {
-    namespace.value = e
-    await docList(e)
-}
-
 // 获取文档列表
-const docList = async (namespace: string) => {
+const getDocList = async (value: string) => {
+    namespace.value = value
     try {
         tableLoading.value = true
-        const { data } = await request(`/docs?namespace=${namespace}`)
+        const { data } = await request(`/docs?namespace=${value}`)
         tableData.value = data
         tableLoading.value = false
     } catch (e: any) {
@@ -190,7 +184,7 @@ const fileZip = (list: any[]) => {
 onBeforeMount(() => {
     const token = window.localStorage.getItem('yuque_token')
     consola.info('index', token)
-    token && reposList()
+    token && getReposList()
 })
 </script>
 <style scoped lang="scss">
