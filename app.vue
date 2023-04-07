@@ -1,5 +1,5 @@
 <template>
-    <el-container v-loading="loading">
+    <el-container v-show="!loading" v-loading="loading">
         <el-header v-if="route.name !== 'login'">
             <div style="display: flex; align-items: center">
                 <span>语雀批量导出</span>
@@ -21,17 +21,32 @@
         </el-main>
     </el-container>
 </template>
-<script setup>
+<script setup lang="ts">
 import 'normalize.css/normalize.css'
-import { useCookie, useRoute, useRouter } from 'nuxt/app'
+import { useRoute, useRouter } from 'nuxt/app'
+import { onBeforeMount, Ref, ref } from 'vue'
+import consola from 'consola'
 const route = useRoute()
 const router = useRouter()
+const loading: Ref<Boolean> = ref(true)
+
+onBeforeMount(() => {
+    const token = window.localStorage.getItem('yuque_token')
+    consola.info(token)
+    if (!token) {
+        router.push({
+            path: 'login'
+        })
+        loading.value = false
+    } else {
+        loading.value = false
+    }
+})
 
 // 退出登录
 const login = () => {
-    const token = useCookie('yuque_token')
     // 清空token
-    token.value = ''
+    window.localStorage.setItem('yuque_token', '')
     router.push({
         path: 'login'
     })

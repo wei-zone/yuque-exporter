@@ -74,9 +74,8 @@ import dayjs from 'dayjs'
 import { onBeforeMount, Ref, ref } from 'vue'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
-import { useCookie, useRouter } from 'nuxt/app'
+import consola from 'consola'
 import request from '~/plugin/request.app'
-const router = useRouter()
 
 // 知识库
 interface Repo {
@@ -102,7 +101,7 @@ interface Doc {
 const namespace: Ref<String> = ref('')
 const reposData: Ref<Repo[]> = ref([])
 const tableData: Ref<Doc[]> = ref([])
-const tableLoading: Ref<boolean> = ref(true)
+const tableLoading: Ref<Boolean> = ref(true)
 // 选中文档库
 const multipleSelection = ref<string[]>([])
 
@@ -189,14 +188,9 @@ const fileZip = (list: any[]) => {
 }
 
 onBeforeMount(() => {
-    const token = useCookie('yuque_token')
-    if (!token.value) {
-        router.push({
-            path: 'login'
-        })
-    } else {
-        reposList()
-    }
+    const token = window.localStorage.getItem('yuque_token')
+    consola.info('index', token)
+    token && reposList()
 })
 </script>
 <style scoped lang="scss">

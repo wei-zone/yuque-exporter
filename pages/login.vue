@@ -31,7 +31,7 @@
 </template>
 
 <script lang="ts" setup>
-import { useCookie, useRouter } from 'nuxt/app'
+import { useRouter } from 'nuxt/app'
 import { reactive } from 'vue'
 const router = useRouter()
 
@@ -41,9 +41,9 @@ const form = reactive({
 
 // 登录
 const login = () => {
-    const token: any = useCookie('yuque_token')
-    // 保存token到cookie
-    token.value = form.token || import.meta.env.VITE_TOKEN || ''
+    // 保存token到storage
+    const token: any = form.token || import.meta.env.VITE_TOKEN || ''
+    window.localStorage.setItem('yuque_token', token)
     router.push({
         path: '/'
     })
