@@ -22,7 +22,7 @@ COPY package*.json /usr/src/app/
 RUN npm install --shamefully-hoist --registry=https://registry.npm.taobao.org
 
 ## 打包
-RUN npm build
+RUN npm run build
 
 ## Copy local code to the container image.
 ## 将本地代码复制到工作目录内
