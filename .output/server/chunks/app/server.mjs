@@ -1,15 +1,15 @@
-import { getCurrentInstance, version, warn, watch, unref, inject, ref, computed, provide, defineComponent, openBlock, createElementBlock, mergeProps, renderSlot, onUnmounted, normalizeClass, normalizeStyle, Fragment as Fragment$1, createBlock, withCtx, resolveDynamicComponent, createCommentVNode, reactive, toRef, useSlots, useSSRContext, shallowRef, isReadonly, isRef, Text, createTextVNode, createVNode, createApp, nextTick, toRefs, h, Suspense, Transition, onErrorCaptured, onServerPrefetch, createElementVNode, withDirectives, vShow, defineAsyncComponent } from 'vue';
+import { version, inject, ref, computed, unref, getCurrentInstance, provide, defineComponent, openBlock, createElementBlock, mergeProps, renderSlot, onUnmounted, normalizeClass, normalizeStyle, Fragment as Fragment$1, createBlock, withCtx, resolveDynamicComponent, createCommentVNode, reactive, toRef, useSlots, useSSRContext, watchEffect, watch, warn, isRef, Text, createTextVNode, createVNode, createApp, nextTick, toRefs, h, Suspense, Transition, onErrorCaptured, onServerPrefetch, shallowRef, isReadonly, createElementVNode, withDirectives, vShow, defineAsyncComponent } from 'vue';
 import { $fetch } from 'ofetch';
 import { createHooks } from 'hookable';
 import { getContext, executeAsync } from 'unctx';
-import { useHead, createHead as createHead$1 } from '@unhead/vue';
-import { renderDOMHead, debouncedRenderDOMHead } from '@unhead/dom';
 import { renderSSRHead } from '@unhead/ssr';
-import { createMemoryHistory, createRouter, RouterView } from 'vue-router';
-import { createError as createError$1, sendRedirect } from 'h3';
+import { getActiveHead, createServerHead as createServerHead$1 } from 'unhead';
+import { defineHeadPlugin } from '@unhead/shared';
+import { RouterView, createMemoryHistory, createRouter } from 'vue-router';
+import { sendRedirect, createError as createError$1, setResponseStatus as setResponseStatus$1 } from 'h3';
 import { hasProtocol, parseURL, joinURL, isEqual } from 'ufo';
-import { isClient, isNumber } from '@vueuse/core';
-import { camelize, isString, isObject as isObject$1, hasOwn, NOOP, hyphenate } from '@vue/shared';
+import { isNumber, isClient } from '@vueuse/core';
+import { isString, NOOP, isObject, hasOwn, hyphenate, camelize } from '@vue/shared';
 import { ssrRenderComponent, ssrGetDirectiveProps, ssrRenderStyle, ssrRenderSuspense } from 'vue/server-renderer';
 import { get, set, fromPairs } from 'lodash-unified';
 import { TinyColor } from '@ctrl/tinycolor';
@@ -30,13 +30,21 @@ import 'pathe';
 
 const appConfig = useRuntimeConfig$1().app;
 const baseURL = () => appConfig.baseURL;
-const nuxtAppCtx = getContext("nuxt-app");
+const nuxtAppCtx = /* @__PURE__ */ getContext("nuxt-app");
 const NuxtPluginIndicator = "__nuxt_plugin";
 function createNuxtApp(options) {
   let hydratingCount = 0;
   const nuxtApp = {
     provide: void 0,
     globalName: "nuxt",
+    versions: {
+      get nuxt() {
+        return "3.3.3";
+      },
+      get vue() {
+        return nuxtApp.vueApp.version;
+      }
+    },
     payload: reactive({
       data: {},
       state: {},
@@ -72,6 +80,14 @@ function createNuxtApp(options) {
   };
   nuxtApp.hooks = createHooks();
   nuxtApp.hook = nuxtApp.hooks.hook;
+  {
+    async function contextCaller(hooks, args) {
+      for (const hook of hooks) {
+        await nuxtAppCtx.call(nuxtApp, () => hook(...args));
+      }
+    }
+    nuxtApp.hooks.callHook = (name, ...args) => nuxtApp.hooks.callHookWith(contextCaller, name, ...args);
+  }
   nuxtApp.callHook = nuxtApp.hooks.callHook;
   nuxtApp.provide = (name, value) => {
     const $name = "$" + name;
@@ -94,9 +110,6 @@ function createNuxtApp(options) {
       app: options.ssrContext.runtimeConfig.app
     };
   }
-  nuxtApp.hook("app:error", (...args) => {
-    console.error("[nuxt] error caught during app initialization", ...args);
-  });
   const runtimeConfig = options.ssrContext.runtimeConfig;
   const compatibilityConfig = new Proxy(runtimeConfig, {
     get(target, prop) {
@@ -169,133 +182,144 @@ function useRuntimeConfig() {
 function defineGetter(obj, key, val) {
   Object.defineProperty(obj, key, { get: () => val });
 }
-function defineAppConfig(config) {
-  return config;
-}
 const components = {};
-const components_plugin_KR1HBZs4kY = defineNuxtPlugin((nuxtApp) => {
+const components_plugin_KR1HBZs4kY = /* @__PURE__ */ defineNuxtPlugin((nuxtApp) => {
   for (const name in components) {
     nuxtApp.vueApp.component(name, components[name]);
     nuxtApp.vueApp.component("Lazy" + name, components[name]);
   }
 });
-function createHead(initHeadObject, options) {
-  const unhead = createHead$1(options || {});
-  const legacyHead = {
-    unhead,
+function resolveUnref(r) {
+  return typeof r === "function" ? r() : unref(r);
+}
+function resolveUnrefHeadInput(ref2, lastKey = "") {
+  if (ref2 instanceof Promise)
+    return ref2;
+  const root = resolveUnref(ref2);
+  if (!ref2 || !root)
+    return root;
+  if (Array.isArray(root))
+    return root.map((r) => resolveUnrefHeadInput(r, lastKey));
+  if (typeof root === "object") {
+    return Object.fromEntries(
+      Object.entries(root).map(([k, v]) => {
+        if (k === "titleTemplate" || k.startsWith("on"))
+          return [k, unref(v)];
+        return [k, resolveUnrefHeadInput(v, k)];
+      })
+    );
+  }
+  return root;
+}
+const Vue3 = version.startsWith("3");
+const headSymbol = "usehead";
+function injectHead() {
+  return getCurrentInstance() && inject(headSymbol) || getActiveHead();
+}
+function vueInstall(head) {
+  const plugin = {
     install(app) {
-      if (version.startsWith("3")) {
-        app.config.globalProperties.$head = unhead;
-        app.provide("usehead", unhead);
+      if (Vue3) {
+        app.config.globalProperties.$unhead = head;
+        app.config.globalProperties.$head = head;
+        app.provide(headSymbol, head);
       }
-    },
-    use(plugin) {
-      unhead.use(plugin);
-    },
-    resolveTags() {
-      return unhead.resolveTags();
-    },
-    headEntries() {
-      return unhead.headEntries();
-    },
-    headTags() {
-      return unhead.resolveTags();
-    },
-    push(input, options2) {
-      return unhead.push(input, options2);
-    },
-    addEntry(input, options2) {
-      return unhead.push(input, options2);
-    },
-    addHeadObjs(input, options2) {
-      return unhead.push(input, options2);
-    },
-    addReactiveEntry(input, options2) {
-      const api = useHead(input, options2);
-      if (typeof api !== "undefined")
-        return api.dispose;
-      return () => {
-      };
-    },
-    removeHeadObjs() {
-    },
-    updateDOM(document2, force) {
-      if (force)
-        renderDOMHead(unhead, { document: document2 });
-      else
-        debouncedRenderDOMHead(unhead, { delayFn: (fn) => setTimeout(() => fn(), 50), document: document2 });
-    },
-    internalHooks: unhead.hooks,
-    hooks: {
-      "before:dom": [],
-      "resolved:tags": [],
-      "resolved:entries": []
     }
   };
-  unhead.addHeadObjs = legacyHead.addHeadObjs;
-  unhead.updateDOM = legacyHead.updateDOM;
-  unhead.hooks.hook("dom:beforeRender", (ctx) => {
-    for (const hook of legacyHead.hooks["before:dom"]) {
-      if (hook() === false)
-        ctx.shouldRender = false;
+  return plugin.install;
+}
+function createServerHead(options = {}) {
+  const head = createServerHead$1({
+    ...options,
+    plugins: [
+      VueReactiveUseHeadPlugin(),
+      ...(options == null ? void 0 : options.plugins) || []
+    ]
+  });
+  head.install = vueInstall(head);
+  return head;
+}
+const VueReactiveUseHeadPlugin = () => {
+  return defineHeadPlugin({
+    hooks: {
+      "entries:resolve": function(ctx) {
+        for (const entry2 of ctx.entries)
+          entry2.resolvedInput = resolveUnrefHeadInput(entry2.input);
+      }
     }
   });
-  if (initHeadObject)
-    legacyHead.addHeadObjs(initHeadObject);
-  return legacyHead;
+};
+function clientUseHead(input, options = {}) {
+  const head = injectHead();
+  const deactivated = ref(false);
+  const resolvedInput = ref({});
+  watchEffect(() => {
+    resolvedInput.value = deactivated.value ? {} : resolveUnrefHeadInput(input);
+  });
+  const entry2 = head.push(resolvedInput.value, options);
+  watch(resolvedInput, (e) => {
+    entry2.patch(e);
+  });
+  getCurrentInstance();
+  return entry2;
 }
-version.startsWith("2.");
+function serverUseHead(input, options = {}) {
+  const head = injectHead();
+  return head.push(input, options);
+}
+function useHead(input, options = {}) {
+  var _a;
+  const head = injectHead();
+  if (head) {
+    const isBrowser = !!((_a = head.resolvedOptions) == null ? void 0 : _a.document);
+    if (options.mode === "server" && isBrowser || options.mode === "client" && !isBrowser)
+      return;
+    return isBrowser ? clientUseHead(input, options) : serverUseHead(input, options);
+  }
+}
 const appHead = { "meta": [{ "charset": "utf-8" }, { "name": "author", "content": "魏国, forguo, wforguo" }, { "name": "baidu-site-verification", "content": "code-bakUos2v8l" }, { "name": "google-site-verification", "content": "9aVJNYlDCl0rCI1akpdSqg9Xwr47KJrVWSXktSsfwKE" }, { "name": "viewport", "content": "width=device-width, initial-scale=1" }, { "name": "description", "content": "语雀，语雀文档导出，语雀文档批量导出，语雀批量导出，wforguo，forguo" }, { "name": "keywords", "content": "语雀|语雀文档导出|语雀文档批量导出|语雀批量导出|wforguo|forguo" }], "link": [], "style": [], "script": [{ "src": "https://hm.baidu.com/hm.js?2788f1f4f01e060d6d892f4bbd5b74d4" }], "noscript": [], "charset": "utf-8", "viewport": "width=device-width, initial-scale=1", "title": "语雀批量导出" };
 const appPageTransition = false;
 const appKeepalive = false;
-const vueuse_head_plugin_1OmhNs80OQ = defineNuxtPlugin((nuxtApp) => {
+const unhead_dGwCAq3sFY = /* @__PURE__ */ defineNuxtPlugin((nuxtApp) => {
+  const createHead = createServerHead;
   const head = createHead();
   head.push(appHead);
   nuxtApp.vueApp.use(head);
-  nuxtApp._useHead = useHead;
   {
     nuxtApp.ssrContext.renderMeta = async () => {
-      const meta = await renderSSRHead(head.unhead);
+      const meta = await renderSSRHead(head);
       return {
         ...meta,
         bodyScriptsPrepend: meta.bodyTagsOpen,
-        // resolves naming difference with NuxtMeta and @vueuse/head
+        // resolves naming difference with NuxtMeta and Unhead
         bodyScripts: meta.bodyTags
       };
     };
   }
 });
-const useError = () => toRef(useNuxtApp().payload, "error");
-const showError = (_err) => {
-  const err = createError(_err);
-  try {
-    const nuxtApp = useNuxtApp();
-    nuxtApp.callHook("app:error", err);
-    const error = useError();
-    error.value = error.value || err;
-  } catch {
-    throw err;
-  }
-  return err;
-};
-const createError = (err) => {
-  const _err = createError$1(err);
-  _err.__nuxt_error = true;
-  return _err;
-};
-function useRequestEvent(nuxtApp = useNuxtApp()) {
-  var _a;
-  return (_a = nuxtApp.ssrContext) == null ? void 0 : _a.event;
+function polyfillAsVueUseHead(head) {
+  const polyfilled = head;
+  polyfilled.headTags = head.resolveTags;
+  polyfilled.addEntry = head.push;
+  polyfilled.addHeadObjs = head.push;
+  polyfilled.addReactiveEntry = (input, options) => {
+    const api = useHead(input, options);
+    if (typeof api !== "undefined")
+      return api.dispose;
+    return () => {
+    };
+  };
+  polyfilled.removeHeadObjs = () => {
+  };
+  polyfilled.updateDOM = () => {
+    head.hooks.callHook("entries:updated", head);
+  };
+  polyfilled.unhead = head;
+  return polyfilled;
 }
-function setResponseStatus(code, message) {
-  const event = useRequestEvent();
-  if (event) {
-    event.node.res.statusCode = code;
-    if (message) {
-      event.node.res.statusMessage = message;
-    }
-  }
-}
+const vueuse_head_polyfill_0nbgZDZ4BU = /* @__PURE__ */ defineNuxtPlugin((nuxtApp) => {
+  polyfillAsVueUseHead(nuxtApp.vueApp._context.provides.usehead);
+});
 function useState(...args) {
   const autoKey = typeof args[args.length - 1] === "string" ? args.pop() : void 0;
   if (typeof args[0] !== "string") {
@@ -320,6 +344,16 @@ function useState(...args) {
     state.value = initialValue;
   }
   return state;
+}
+function useRequestEvent(nuxtApp = useNuxtApp()) {
+  var _a;
+  return (_a = nuxtApp.ssrContext) == null ? void 0 : _a.event;
+}
+function setResponseStatus(arg1, arg2, arg3) {
+  if (arg1 && typeof arg1 !== "number") {
+    return setResponseStatus$1(arg1, arg2, arg3);
+  }
+  return setResponseStatus$1(useRequestEvent(), arg1, arg2);
 }
 const useRouter = () => {
   var _a;
@@ -347,7 +381,7 @@ const navigateTo = (to, options) => {
     to = "/";
   }
   const toPath = typeof to === "string" ? to : to.path || "/";
-  const isExternal = hasProtocol(toPath, true);
+  const isExternal = (options == null ? void 0 : options.external) || hasProtocol(toPath, { acceptRelative: true });
   if (isExternal && !(options == null ? void 0 : options.external)) {
     throw new Error("Navigating to external URL is not allowed by default. Use `navigateTo (url, { external: true })`.");
   }
@@ -359,7 +393,7 @@ const navigateTo = (to, options) => {
     const nuxtApp = useNuxtApp();
     if (nuxtApp.ssrContext && nuxtApp.ssrContext.event) {
       if (isProcessingMiddleware() && !isExternal) {
-        setResponseStatus((options == null ? void 0 : options.redirectCode) || 302);
+        setResponseStatus(nuxtApp.ssrContext.event, (options == null ? void 0 : options.redirectCode) || 302);
         return to;
       }
       const redirectLocation = isExternal ? toPath : joinURL(useRuntimeConfig().app.baseURL, router.resolve(to).fullPath || "/");
@@ -376,24 +410,40 @@ const navigateTo = (to, options) => {
   }
   return (options == null ? void 0 : options.replace) ? router.replace(to) : router.push(to);
 };
+const useError = () => toRef(useNuxtApp().payload, "error");
+const showError = (_err) => {
+  const err = createError(_err);
+  try {
+    const nuxtApp = useNuxtApp();
+    nuxtApp.callHook("app:error", err);
+    const error = useError();
+    error.value = error.value || err;
+  } catch {
+    throw err;
+  }
+  return err;
+};
+const createError = (err) => {
+  const _err = createError$1(err);
+  _err.__nuxt_error = true;
+  return _err;
+};
 const _routes = [
   {
     name: "index",
     path: "/",
-    children: [],
     meta: {},
     alias: [],
     redirect: void 0,
-    component: () => import('./_nuxt/index-17b4d0a7.mjs').then((m) => m.default || m)
+    component: () => import('./_nuxt/index-abb9bd5e.mjs').then((m) => m.default || m)
   },
   {
     name: "login",
     path: "/login",
-    children: [],
     meta: {},
     alias: [],
     redirect: void 0,
-    component: () => import('./_nuxt/login-0d353643.mjs').then((m) => m.default || m)
+    component: () => import('./_nuxt/login-82713b0d.mjs').then((m) => m.default || m)
   }
 ];
 const routerOptions0 = {
@@ -449,7 +499,7 @@ const routerOptions = {
   ...configRouterOptions,
   ...routerOptions0
 };
-const validate = defineNuxtRouteMiddleware(async (to) => {
+const validate = /* @__PURE__ */ defineNuxtRouteMiddleware(async (to) => {
   var _a;
   let __temp, __restore;
   if (!((_a = to.meta) == null ? void 0 : _a.validate)) {
@@ -469,7 +519,7 @@ const globalMiddleware = [
   validate
 ];
 const namedMiddleware = {};
-const router_kAjDJcSifI = defineNuxtPlugin(async (nuxtApp) => {
+const router_NxeSbzJnjG = /* @__PURE__ */ defineNuxtPlugin(async (nuxtApp) => {
   var _a, _b;
   let __temp, __restore;
   let routerBase = useRuntimeConfig().app.baseURL;
@@ -599,61 +649,7 @@ const router_kAjDJcSifI = defineNuxtPlugin(async (nuxtApp) => {
   });
   return { provide: { router } };
 });
-function isObject(value) {
-  return value !== null && typeof value === "object";
-}
-function _defu(baseObject, defaults, namespace = ".", merger) {
-  if (!isObject(defaults)) {
-    return _defu(baseObject, {}, namespace, merger);
-  }
-  const object = Object.assign({}, defaults);
-  for (const key in baseObject) {
-    if (key === "__proto__" || key === "constructor") {
-      continue;
-    }
-    const value = baseObject[key];
-    if (value === null || value === void 0) {
-      continue;
-    }
-    if (merger && merger(object, key, value, namespace)) {
-      continue;
-    }
-    if (Array.isArray(value) && Array.isArray(object[key])) {
-      object[key] = [...value, ...object[key]];
-    } else if (isObject(value) && isObject(object[key])) {
-      object[key] = _defu(
-        value,
-        object[key],
-        (namespace ? `${namespace}.` : "") + key.toString(),
-        merger
-      );
-    } else {
-      object[key] = value;
-    }
-  }
-  return object;
-}
-function createDefu(merger) {
-  return (...arguments_) => (
-    // eslint-disable-next-line unicorn/no-array-reduce
-    arguments_.reduce((p, c) => _defu(p, c, "", merger), {})
-  );
-}
-const defuFn = createDefu((object, key, currentValue) => {
-  if (typeof object[key] !== "undefined" && typeof currentValue === "function") {
-    object[key] = currentValue(object[key]);
-    return true;
-  }
-});
-const cfg0 = defineAppConfig({
-  title: "YuQue Exporter",
-  theme: {
-    colors: {}
-  }
-});
-const inlineConfig = {};
-defuFn(cfg0, inlineConfig);
-const element_plus_teleports_plugin_h4Dmekbj62 = defineNuxtPlugin((nuxtApp) => {
+const element_plus_teleports_plugin_h4Dmekbj62 = /* @__PURE__ */ defineNuxtPlugin((nuxtApp) => {
   nuxtApp.hook("app:rendered", (ctx) => {
     var _a;
     if ((_a = ctx.ssrContext) == null ? void 0 : _a.teleports) {
@@ -705,13 +701,6 @@ function throwError(scope, m) {
 function debugWarn(scope, message) {
 }
 const classNameToArray = (cls = "") => cls.split(" ").filter((item) => !!item.trim());
-const hasClass = (el, cls) => {
-  if (!el || !cls)
-    return false;
-  if (cls.includes(" "))
-    throw new Error("className should not contain space.");
-  return el.classList.contains(cls);
-};
 const addClass = (el, cls) => {
   if (!el || !cls.trim())
     return;
@@ -755,72 +744,28 @@ var export_helper_default = (sfc, props) => {
     target[key] = val;
   return target;
 };
-var arrow_down_vue_vue_type_script_lang_default = {
-  name: "ArrowDown"
+var caret_right_vue_vue_type_script_lang_default = {
+  name: "CaretRight"
 };
-var _hoisted_16 = {
+var _hoisted_134 = {
   xmlns: "http://www.w3.org/2000/svg",
   viewBox: "0 0 1024 1024"
-}, _hoisted_26 = /* @__PURE__ */ createElementVNode(
+}, _hoisted_234 = /* @__PURE__ */ createElementVNode(
   "path",
   {
     fill: "currentColor",
-    d: "M831.872 340.864 512 652.672 192.128 340.864a30.592 30.592 0 0 0-42.752 0 29.12 29.12 0 0 0 0 41.6L489.664 714.24a32 32 0 0 0 44.672 0l340.288-331.712a29.12 29.12 0 0 0 0-41.728 30.592 30.592 0 0 0-42.752 0z"
+    d: "M384 192v640l384-320.064z"
   },
   null,
   -1
   /* HOISTED */
-), _hoisted_36 = [
-  _hoisted_26
+), _hoisted_333 = [
+  _hoisted_234
 ];
-function _sfc_render6(_ctx, _cache, $props, $setup, $data, $options) {
-  return openBlock(), createElementBlock("svg", _hoisted_16, _hoisted_36);
+function _sfc_render34(_ctx, _cache, $props, $setup, $data, $options) {
+  return openBlock(), createElementBlock("svg", _hoisted_134, _hoisted_333);
 }
-var arrow_down_default = /* @__PURE__ */ export_helper_default(arrow_down_vue_vue_type_script_lang_default, [["render", _sfc_render6], ["__file", "arrow-down.vue"]]);
-var arrow_right_vue_vue_type_script_lang_default = {
-  name: "ArrowRight"
-};
-var _hoisted_110 = {
-  xmlns: "http://www.w3.org/2000/svg",
-  viewBox: "0 0 1024 1024"
-}, _hoisted_210 = /* @__PURE__ */ createElementVNode(
-  "path",
-  {
-    fill: "currentColor",
-    d: "M340.864 149.312a30.592 30.592 0 0 0 0 42.752L652.736 512 340.864 831.872a30.592 30.592 0 0 0 0 42.752 29.12 29.12 0 0 0 41.728 0L714.24 534.336a32 32 0 0 0 0-44.672L382.592 149.376a29.12 29.12 0 0 0-41.728 0z"
-  },
-  null,
-  -1
-  /* HOISTED */
-), _hoisted_310 = [
-  _hoisted_210
-];
-function _sfc_render10(_ctx, _cache, $props, $setup, $data, $options) {
-  return openBlock(), createElementBlock("svg", _hoisted_110, _hoisted_310);
-}
-var arrow_right_default = /* @__PURE__ */ export_helper_default(arrow_right_vue_vue_type_script_lang_default, [["render", _sfc_render10], ["__file", "arrow-right.vue"]]);
-var arrow_up_vue_vue_type_script_lang_default = {
-  name: "ArrowUp"
-};
-var _hoisted_112 = {
-  xmlns: "http://www.w3.org/2000/svg",
-  viewBox: "0 0 1024 1024"
-}, _hoisted_212 = /* @__PURE__ */ createElementVNode(
-  "path",
-  {
-    fill: "currentColor",
-    d: "m488.832 344.32-339.84 356.672a32 32 0 0 0 0 44.16l.384.384a29.44 29.44 0 0 0 42.688 0l320-335.872 319.872 335.872a29.44 29.44 0 0 0 42.688 0l.384-.384a32 32 0 0 0 0-44.16L535.168 344.32a32 32 0 0 0-46.336 0z"
-  },
-  null,
-  -1
-  /* HOISTED */
-), _hoisted_312 = [
-  _hoisted_212
-];
-function _sfc_render12(_ctx, _cache, $props, $setup, $data, $options) {
-  return openBlock(), createElementBlock("svg", _hoisted_112, _hoisted_312);
-}
-var arrow_up_default = /* @__PURE__ */ export_helper_default(arrow_up_vue_vue_type_script_lang_default, [["render", _sfc_render12], ["__file", "arrow-up.vue"]]);
+var caret_right_default = /* @__PURE__ */ export_helper_default(caret_right_vue_vue_type_script_lang_default, [["render", _sfc_render34], ["__file", "caret-right.vue"]]);
 var circle_check_vue_vue_type_script_lang_default = {
   name: "CircleCheck"
 };
@@ -929,6 +874,28 @@ function _sfc_render56(_ctx, _cache, $props, $setup, $data, $options) {
   return openBlock(), createElementBlock("svg", _hoisted_156, _hoisted_355);
 }
 var close_default = /* @__PURE__ */ export_helper_default(close_vue_vue_type_script_lang_default, [["render", _sfc_render56], ["__file", "close.vue"]]);
+var download_vue_vue_type_script_lang_default = {
+  name: "Download"
+};
+var _hoisted_191 = {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 1024 1024"
+}, _hoisted_291 = /* @__PURE__ */ createElementVNode(
+  "path",
+  {
+    fill: "currentColor",
+    d: "M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64zm384-253.696 236.288-236.352 45.248 45.248L508.8 704 192 387.2l45.248-45.248L480 584.704V128h64v450.304z"
+  },
+  null,
+  -1
+  /* HOISTED */
+), _hoisted_390 = [
+  _hoisted_291
+];
+function _sfc_render91(_ctx, _cache, $props, $setup, $data, $options) {
+  return openBlock(), createElementBlock("svg", _hoisted_191, _hoisted_390);
+}
+var download_default = /* @__PURE__ */ export_helper_default(download_vue_vue_type_script_lang_default, [["render", _sfc_render91], ["__file", "download.vue"]]);
 var hide_vue_vue_type_script_lang_default = {
   name: "Hide"
 };
@@ -1027,48 +994,6 @@ function _sfc_render249(_ctx, _cache, $props, $setup, $data, $options) {
   return openBlock(), createElementBlock("svg", _hoisted_1249, _hoisted_3248);
 }
 var success_filled_default = /* @__PURE__ */ export_helper_default(success_filled_vue_vue_type_script_lang_default, [["render", _sfc_render249], ["__file", "success-filled.vue"]]);
-var timer_vue_vue_type_script_lang_default = {
-  name: "Timer"
-};
-var _hoisted_1262 = {
-  xmlns: "http://www.w3.org/2000/svg",
-  viewBox: "0 0 1024 1024"
-}, _hoisted_2262 = /* @__PURE__ */ createElementVNode(
-  "path",
-  {
-    fill: "currentColor",
-    d: "M512 896a320 320 0 1 0 0-640 320 320 0 0 0 0 640zm0 64a384 384 0 1 1 0-768 384 384 0 0 1 0 768z"
-  },
-  null,
-  -1
-  /* HOISTED */
-), _hoisted_3261 = /* @__PURE__ */ createElementVNode(
-  "path",
-  {
-    fill: "currentColor",
-    d: "M512 320a32 32 0 0 1 32 32l-.512 224a32 32 0 1 1-64 0L480 352a32 32 0 0 1 32-32z"
-  },
-  null,
-  -1
-  /* HOISTED */
-), _hoisted_479 = /* @__PURE__ */ createElementVNode(
-  "path",
-  {
-    fill: "currentColor",
-    d: "M448 576a64 64 0 1 0 128 0 64 64 0 1 0-128 0zm96-448v128h-64V128h-96a32 32 0 0 1 0-64h256a32 32 0 1 1 0 64h-96z"
-  },
-  null,
-  -1
-  /* HOISTED */
-), _hoisted_522 = [
-  _hoisted_2262,
-  _hoisted_3261,
-  _hoisted_479
-];
-function _sfc_render262(_ctx, _cache, $props, $setup, $data, $options) {
-  return openBlock(), createElementBlock("svg", _hoisted_1262, _hoisted_522);
-}
-var timer_default = /* @__PURE__ */ export_helper_default(timer_vue_vue_type_script_lang_default, [["render", _sfc_render262], ["__file", "timer.vue"]]);
 var view_vue_vue_type_script_lang_default = {
   name: "View"
 };
@@ -1115,9 +1040,9 @@ function _sfc_render287(_ctx, _cache, $props, $setup, $data, $options) {
 var warning_filled_default = /* @__PURE__ */ export_helper_default(warning_filled_vue_vue_type_script_lang_default, [["render", _sfc_render287], ["__file", "warning-filled.vue"]]);
 const epPropKey = "__epPropKey";
 const definePropType = (val) => val;
-const isEpProp = (val) => isObject$1(val) && !!val[epPropKey];
+const isEpProp = (val) => isObject(val) && !!val[epPropKey];
 const buildProp = (prop, key) => {
-  if (!isObject$1(prop) || isEpProp(prop))
+  if (!isObject(prop) || isEpProp(prop))
     return prop;
   const { values, required, default: defaultValue, type, validator } = prop;
   const _validator = values || validator ? (val) => {
@@ -1175,18 +1100,18 @@ const ValidateComponentsMap = {
   success: circle_check_default,
   error: circle_close_default
 };
-const withInstall = (main, extra) => {
-  main.install = (app) => {
-    for (const comp of [main, ...Object.values(extra != null ? extra : {})]) {
+const withInstall = (main2, extra) => {
+  main2.install = (app) => {
+    for (const comp of [main2, ...Object.values(extra != null ? extra : {})]) {
       app.component(comp.name, comp);
     }
   };
   if (extra) {
     for (const [key, comp] of Object.entries(extra)) {
-      main[key] = comp;
+      main2[key] = comp;
     }
   }
-  return main;
+  return main2;
 };
 const withInstallFunction = (fn, name) => {
   fn.install = (app) => {
@@ -1200,11 +1125,6 @@ const withNoopInstall = (component) => {
   return component;
 };
 const componentSizes = ["", "default", "small", "large"];
-const componentSizeMap = {
-  large: 40,
-  default: 32,
-  small: 24
-};
 const useDeprecated = ({ from, replacement, scope, version: version2, ref: ref2, type = "API" }, condition) => {
   watch(() => unref(condition), (val) => {
   }, {
@@ -1468,7 +1388,7 @@ const useProp = (name) => {
   const vm = getCurrentInstance();
   return computed(() => {
     var _a, _b;
-    return (_b = ((_a = vm.proxy) == null ? void 0 : _a.$props)[name]) != null ? _b : void 0;
+    return (_b = (_a = vm == null ? void 0 : vm.proxy) == null ? void 0 : _a.$props) == null ? void 0 : _b[name];
   });
 };
 const defaultIdInjection = {
@@ -2083,7 +2003,7 @@ const ElContainer = withInstall(Container, {
   Header,
   Main
 });
-withNoopInstall(Aside);
+const ElAside = withNoopInstall(Aside);
 withNoopInstall(Footer);
 const ElHeader = withNoopInstall(Header);
 const ElMain = withNoopInstall(Main);
@@ -2298,7 +2218,7 @@ const INSTANCE_KEY = Symbol("ElLoading");
 const createInstance = (el, binding) => {
   var _a, _b, _c, _d;
   const vm = binding.instance;
-  const getBindingProp = (key) => isObject$1(binding.value) ? binding.value[key] : void 0;
+  const getBindingProp = (key) => isObject(binding.value) ? binding.value[key] : void 0;
   const resolveExpression = (key) => {
     const data = isString(key) && (vm == null ? void 0 : vm[key]) || key;
     if (data)
@@ -2343,7 +2263,7 @@ const vLoading = {
       if (binding.value && !binding.oldValue) {
         createInstance(el, binding);
       } else if (binding.value && binding.oldValue) {
-        if (isObject$1(binding.value))
+        if (isObject(binding.value))
           updateOptions(binding.value, instance.options);
       } else {
         instance == null ? void 0 : instance.instance.close();
@@ -2355,13 +2275,14 @@ const vLoading = {
     (_a = el[INSTANCE_KEY]) == null ? void 0 : _a.instance.close();
   }
 };
-const element_plus_injection_plugin_1RNPi6ogby = defineNuxtPlugin((nuxtApp) => {
+const element_plus_injection_plugin_1RNPi6ogby = /* @__PURE__ */ defineNuxtPlugin((nuxtApp) => {
   nuxtApp.vueApp.provide(ID_INJECTION_KEY, { "prefix": 1024, "current": 0 });
 });
 const _plugins = [
   components_plugin_KR1HBZs4kY,
-  vueuse_head_plugin_1OmhNs80OQ,
-  router_kAjDJcSifI,
+  unhead_dGwCAq3sFY,
+  vueuse_head_polyfill_0nbgZDZ4BU,
+  router_NxeSbzJnjG,
   element_plus_teleports_plugin_h4Dmekbj62,
   element_plus_injection_plugin_1RNPi6ogby
 ];
@@ -2488,7 +2409,7 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent({
   setup(__props) {
     const route = useRoute();
     const router = useRouter();
-    const loading = ref(true);
+    const loading2 = ref(true);
     const login = () => {
       window.localStorage.setItem("yuque_token", "");
       router.push({
@@ -2503,15 +2424,15 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent({
       const _component_NuxtPage = __nuxt_component_4;
       const _directive_loading = vLoading;
       _push(ssrRenderComponent(_component_el_container, mergeProps({
-        style: !loading.value ? null : { display: "none" }
-      }, _attrs, ssrGetDirectiveProps(_ctx, _directive_loading, loading.value)), {
+        style: !loading2.value ? null : { display: "none" }
+      }, _attrs, ssrGetDirectiveProps(_ctx, _directive_loading, loading2.value)), {
         default: withCtx((_, _push2, _parent2, _scopeId) => {
           if (_push2) {
             if (unref(route).name !== "login") {
               _push2(ssrRenderComponent(_component_el_header, null, {
                 default: withCtx((_2, _push3, _parent3, _scopeId2) => {
                   if (_push3) {
-                    _push3(`<div style="${ssrRenderStyle({ "display": "flex", "align-items": "center" })}" data-v-21647d1b${_scopeId2}><span data-v-21647d1b${_scopeId2}>语雀批量导出</span><a href="https://github.com/wforguo/yuque-exporter" title="GitHub" target="_blank" class="iconfont icon-github" data-v-21647d1b${_scopeId2}></a></div>`);
+                    _push3(`<div style="${ssrRenderStyle({ "display": "flex", "align-items": "center" })}" data-v-12e8b5b8${_scopeId2}><span data-v-12e8b5b8${_scopeId2}>语雀批量导出</span><a href="https://github.com/wforguo/yuque-exporter" title="GitHub" target="_blank" class="iconfont icon-github" data-v-12e8b5b8${_scopeId2}></a></div>`);
                     if (unref(route).name !== "login") {
                       _push3(ssrRenderComponent(_component_el_button, {
                         type: "warning",
@@ -2565,7 +2486,7 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent({
             _push2(ssrRenderComponent(_component_el_main, null, {
               default: withCtx((_2, _push3, _parent3, _scopeId2) => {
                 if (_push3) {
-                  _push3(`<div class="el-page-main" data-v-21647d1b${_scopeId2}>`);
+                  _push3(`<div class="el-page-main" data-v-12e8b5b8${_scopeId2}>`);
                   _push3(ssrRenderComponent(_component_NuxtPage, null, null, _parent3, _scopeId2));
                   _push3(`</div>`);
                 } else {
@@ -2634,13 +2555,13 @@ _sfc_main$1.setup = (props, ctx) => {
   (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("app.vue");
   return _sfc_setup$1 ? _sfc_setup$1(props, ctx) : void 0;
 };
-const AppComponent = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-21647d1b"]]);
+const AppComponent = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-12e8b5b8"]]);
 const _sfc_main = {
   __name: "nuxt-root",
   __ssrInlineRender: true,
   setup(__props) {
-    const ErrorComponent = /* @__PURE__ */ defineAsyncComponent(() => import('./_nuxt/error-component-4f4685ff.mjs').then((r) => r.default || r));
-    const IslandRenderer = /* @__PURE__ */ defineAsyncComponent(() => import('./_nuxt/island-renderer-a08a5c51.mjs').then((r) => r.default || r));
+    const ErrorComponent = /* @__PURE__ */ defineAsyncComponent(() => import('./_nuxt/error-component-c307ef68.mjs').then((r) => r.default || r));
+    const IslandRenderer = /* @__PURE__ */ defineAsyncComponent(() => import('./_nuxt/island-renderer-85328800.mjs').then((r) => r.default || r));
     const nuxtApp = useNuxtApp();
     nuxtApp.deferHydration();
     provide("_route", useRoute());
@@ -2651,6 +2572,7 @@ const _sfc_main = {
       {
         const p = callWithNuxt(nuxtApp, showError, [err]);
         onServerPrefetch(() => p);
+        return false;
       }
     });
     const { islandContext } = nuxtApp.ssrContext;
@@ -2673,7 +2595,7 @@ const _sfc_main = {
 const _sfc_setup = _sfc_main.setup;
 _sfc_main.setup = (props, ctx) => {
   const ssrContext = useSSRContext();
-  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("node_modules/.pnpm/registry.npmmirror.com+nuxt@3.2.3_hmw6nw4xfl4yg7wwg5s6gqc4de/node_modules/nuxt/dist/app/components/nuxt-root.vue");
+  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("node_modules/.pnpm/registry.npmmirror.com+nuxt@3.3.3_ntigm5zxnpdibkyr63irmrr6ve/node_modules/nuxt/dist/app/components/nuxt-root.vue");
   return _sfc_setup ? _sfc_setup(props, ctx) : void 0;
 };
 const RootComponent = _sfc_main;
@@ -2692,7 +2614,7 @@ const plugins = normalizePlugins(_plugins);
       await applyPlugins(nuxt, plugins);
       await nuxt.hooks.callHook("app:created", vueApp);
     } catch (err) {
-      await nuxt.callHook("app:error", err);
+      await nuxt.hooks.callHook("app:error", err);
       nuxt.payload.error = nuxt.payload.error || err;
     }
     return vueApp;
@@ -2700,5 +2622,5 @@ const plugins = normalizePlugins(_plugins);
 }
 const entry$1 = (ctx) => entry(ctx);
 
-export { navigateTo as $, useDeprecated as A, iconPropType as B, circle_close_default as C, arrow_down_default as D, ElIcon as E, arrow_up_default as F, addClass as G, hasClass as H, removeClass as I, getStyle as J, getProp as K, arrow_right_default as L, loading_default as M, useGlobalComponentSettings as N, TypeComponents as O, withInstallFunction as P, timer_default as Q, ElButton as R, vLoading as S, TypeComponentsMap as T, _export_sfc as U, formContextKey as V, ValidateComponentsMap as W, view_default as X, hide_default as Y, useRouter as Z, _export_sfc$1 as _, componentSizeMap as a, useNuxtApp as a0, componentSizes as b, createError as c, buildProp as d, entry$1 as default, definePropType as e, useIdInjection as f, buildProps as g, useNamespace as h, addUnit as i, debugWarn as j, useZIndex as k, formItemContextKey as l, useId as m, isElement as n, useSizeProp as o, isUndefined as p, useFormDisabled as q, useFormItem as r, useFormSize as s, throwError as t, useGetDerivedNamespace as u, useFormItemInputId as v, withInstall as w, withNoopInstall as x, close_default as y, useLocale as z };
+export { download_default as A, ElContainer as B, ElAside as C, ElMain as D, ElIcon as E, vLoading as F, componentSizes as G, formContextKey as H, useId as I, getProp as J, view_default as K, hide_default as L, circle_close_default as M, useRouter as N, ElButton as O, navigateTo as P, _export_sfc as Q, useHead as R, TypeComponentsMap as T, ValidateComponentsMap as V, _export_sfc$1 as _, addUnit as a, buildProps as b, createError as c, definePropType as d, entry$1 as default, debugWarn as e, useSizeProp as f, useFormDisabled as g, useFormItem as h, isUndefined as i, useFormSize as j, useFormItemInputId as k, withNoopInstall as l, addClass as m, loading_default as n, caret_right_default as o, iconPropType as p, useLocale as q, removeClass as r, formItemContextKey as s, throwError as t, useNamespace as u, useGlobalComponentSettings as v, withInstall as w, TypeComponents as x, isElement as y, withInstallFunction as z };
 //# sourceMappingURL=server.mjs.map

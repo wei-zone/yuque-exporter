@@ -7,13 +7,10 @@ const _export = defineEventHandler(async (event) => {
   var _a, _b, _c, _d;
   try {
     const headers = getHeaders(event);
-    const { slug, namespace } = getQuery(event);
+    const { url, namespace } = getQuery(event);
     const res = await request({
-      headers: {
-        "x-auth-token": headers["x-auth-token"],
-        "user-agent": headers["user-agent"]
-      },
-      url: `/repos/${namespace}/docs/${slug}`,
+      headers,
+      url: `/repos/${namespace}/docs/${url}`,
       method: "get",
       params: {
         /**

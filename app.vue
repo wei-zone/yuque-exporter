@@ -60,8 +60,8 @@ html {
 body {
     width: 100%;
     height: 100%;
-    --vp-header-max-width: 1376px;
-    --vp-main-max-width: 900px;
+    --vp-main-max-width: 1366px;
+    --vp-main-min-width: 768px;
 }
 .page {
     width: 100%;
@@ -82,14 +82,11 @@ body {
     align-items: center;
     justify-content: space-between;
 }
-.el-page-header {
-    margin: 0 auto;
-    max-width: var(--vp-header-max-width);
-}
 .el-page-main {
     height: 100%;
     margin: 0 auto;
     max-width: var(--vp-main-max-width);
+    min-width: var(--vp-main-min-width);
 }
 
 .iconfont {

@@ -5,6 +5,11 @@ const request = axios.create({
   baseURL: "https://www.yuque.com/api/v2/"
 });
 request.interceptors.request.use((config) => {
+  const headers = config.headers;
+  config.headers = {
+    "x-auth-token": headers["x-auth-token"],
+    "user-agent": headers["user-agent"]
+  };
   return config;
 });
 request.interceptors.response.use(

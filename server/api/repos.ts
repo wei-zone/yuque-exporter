@@ -3,35 +3,58 @@
  * @Date: 2023/3/14 20:24
  * @Description: repos.ts
  */
-import { defineEventHandler, getHeaders } from 'h3'
-import { request } from '~/plugin'
+import { defineEventHandler, getHeaders, getQuery } from 'h3'
+import yaml from 'yaml'
+import { listTransferTree, Tree } from '../utils'
+import request from '../utils/request'
 
 export default defineEventHandler(async event => {
     try {
         const headers = getHeaders(event)
-        // 获取当前登录用户信息
-        const user = await request({
-            headers: {
-                'x-auth-token': headers['x-auth-token'],
-                'user-agent': headers['user-agent']
-            },
-            url: '/user',
-            method: 'get'
-        })
-        const { login } = user.data
-        const res = await request({
-            headers: {
-                'x-auth-token': headers['x-auth-token'],
-                'user-agent': headers['user-agent']
-            },
-            url: `/users/${login}/repos`,
-            method: 'get'
-        })
-        return {
-            code: 200,
-            data: res.data,
-            message: 'ok',
-            time: Date.now()
+        const { namespace } = getQuery(event)
+        if (namespace) {
+            // 有知识库名称，获取对应详情数据
+            const { data } = await request({
+                headers,
+                url: `/repos/${namespace}`,
+                method: 'get'
+            })
+            // 目录列表转成树
+            const repoDetail = {
+                ...data,
+                docTree: listTransferTree(
+                    yaml.parse(data.toc_yml).filter((item: Tree) => item.type !== 'META'),
+                    ''
+                )
+            }
+            delete repoDetail.toc_yml
+            delete repoDetail.user
+            return {
+                code: 200,
+                data: repoDetail,
+                message: 'ok',
+                time: Date.now()
+            }
+        } else {
+            // 获取当前用户知识库列表
+            // 先获取当前登录用户信息
+            const user = await request({
+                headers,
+                url: '/user',
+                method: 'get'
+            })
+            const { login } = user.data
+            const res = await request({
+                headers,
+                url: `/users/${login}/repos`,
+                method: 'get'
+            })
+            return {
+                code: 200,
+                data: res.data,
+                message: 'ok',
+                time: Date.now()
+            }
         }
     } catch (e: any) {
         return {

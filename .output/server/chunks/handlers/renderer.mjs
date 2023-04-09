@@ -1,5 +1,5 @@
 import { createRenderer } from 'vue-bundle-renderer/runtime';
-import { eventHandler, getQuery, createError } from 'h3';
+import { eventHandler, setResponseStatus, getQuery, createError } from 'h3';
 import { renderToString } from 'vue/server-renderer';
 import { u as useNitroApp, a as useRuntimeConfig, g as getRouteRules } from '../nitro/node-server.mjs';
 import { joinURL } from 'ufo';
@@ -44,12 +44,7 @@ function defineRenderHandler(handler) {
       for (const header in response.headers) {
         event.node.res.setHeader(header, response.headers[header]);
       }
-      if (response.statusCode) {
-        event.node.res.statusCode = response.statusCode;
-      }
-      if (response.statusMessage) {
-        event.node.res.statusMessage = response.statusMessage;
-      }
+      setResponseStatus(event, response.statusCode, response.statusMessage);
     }
     return typeof response.body === "string" ? response.body : JSON.stringify(response.body);
   });

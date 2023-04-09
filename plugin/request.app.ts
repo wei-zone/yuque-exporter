@@ -8,13 +8,15 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import consola from 'consola'
 
-const request = axios.create({
+const config: any = {
     baseURL: '/api'
-})
+}
+const request = axios.create(config)
 
 request.interceptors.request.use((config: AxiosRequestConfig | any) => {
     // 添加token
     config.headers['x-auth-token'] = window.localStorage.getItem('yuque_token') || ''
+    console.log(config)
     return config
 })
 
@@ -22,6 +24,10 @@ request.interceptors.response.use(
     (res: AxiosResponse) => {
         if (res.status === 200 && res.data.code === 200) {
             return Promise.resolve(res.data)
+        }
+        if (res.config.responseType) {
+            consola.info('request.res -->', res)
+            return Promise.resolve(res)
         }
         consola.info('request.res -->', res)
         ElMessage.error(res.data?.message || res.statusText || '服务异常，请重试')
