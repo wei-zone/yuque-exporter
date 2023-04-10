@@ -7,7 +7,6 @@ specifiers:
   '@nuxtjs/eslint-module': ^4.0.2
   '@types/file-saver': ^2.0.5
   axios: ^1.3.0
-  consola: ^2.15.3
   element-plus: ^2.3.0
   eslint: ^8.36.0
   eslint-config-prettier: ^8.7.0
@@ -28,7 +27,6 @@ specifiers:
 dependencies:
   '@element-plus/icons-vue': registry.npmmirror.com/@element-plus/icons-vue/2.1.0_vue@3.2.47
   axios: registry.npmmirror.com/axios/1.3.5
-  consola: registry.npmmirror.com/consola/2.15.3
   element-plus: registry.npmmirror.com/element-plus/2.3.3_vue@3.2.47
   file-saver: registry.npmmirror.com/file-saver/2.0.5
   jszip: registry.npmmirror.com/jszip/3.10.1
@@ -1302,11 +1300,11 @@ packages:
       rollup: registry.npmmirror.com/rollup/3.20.2
     dev: true
 
-  registry.npmmirror.com/@rollup/plugin-terser/0.4.0_rollup@3.20.2:
-    resolution: {integrity: sha512-Ipcf3LPNerey1q9ZMjiaWHlNPEHNU/B5/uh9zXLltfEQ1lVSLLeZSgAtTPWGyw8Ip1guOeq+mDtdOlEj/wNxQw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@rollup/plugin-terser/-/plugin-terser-0.4.0.tgz}
-    id: registry.npmmirror.com/@rollup/plugin-terser/0.4.0
+  registry.npmmirror.com/@rollup/plugin-terser/0.4.1_rollup@3.20.2:
+    resolution: {integrity: sha512-aKS32sw5a7hy+fEXVy+5T95aDIwjpGHCTv833HXVtyKMDoVS7pBr5K3L9hEQoNqbJFjfANPrNpIXlTQ7is00eA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@rollup/plugin-terser/-/plugin-terser-0.4.1.tgz}
+    id: registry.npmmirror.com/@rollup/plugin-terser/0.4.1
     name: '@rollup/plugin-terser'
-    version: 0.4.0
+    version: 0.4.1
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^2.x || ^3.x
@@ -2264,7 +2262,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: registry.npmmirror.com/browserslist/4.21.5
-      caniuse-lite: registry.npmmirror.com/caniuse-lite/1.0.30001475
+      caniuse-lite: registry.npmmirror.com/caniuse-lite/1.0.30001477
       fraction.js: registry.npmmirror.com/fraction.js/4.2.0
       normalize-range: registry.npmmirror.com/normalize-range/0.1.2
       picocolors: registry.npmmirror.com/picocolors/1.0.0
@@ -2375,7 +2373,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: registry.npmmirror.com/caniuse-lite/1.0.30001475
+      caniuse-lite: registry.npmmirror.com/caniuse-lite/1.0.30001477
       electron-to-chromium: registry.npmmirror.com/electron-to-chromium/1.4.356
       node-releases: registry.npmmirror.com/node-releases/2.0.10
       update-browserslist-db: registry.npmmirror.com/update-browserslist-db/1.0.10_browserslist@4.21.5
@@ -2479,15 +2477,15 @@ packages:
     version: 3.0.0
     dependencies:
       browserslist: registry.npmmirror.com/browserslist/4.21.5
-      caniuse-lite: registry.npmmirror.com/caniuse-lite/1.0.30001475
+      caniuse-lite: registry.npmmirror.com/caniuse-lite/1.0.30001477
       lodash.memoize: registry.npmmirror.com/lodash.memoize/4.1.2
       lodash.uniq: registry.npmmirror.com/lodash.uniq/4.5.0
     dev: true
 
-  registry.npmmirror.com/caniuse-lite/1.0.30001475:
-    resolution: {integrity: sha512-6xvTuQbEjQvvdknKCA/B6w6edEG9OMrkTY3M2sre8Iau/5f9stnJA3RfnzUMZlVhcsp1Lyl2KsM8T2R8B3P0Kg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/caniuse-lite/-/caniuse-lite-1.0.30001475.tgz}
+  registry.npmmirror.com/caniuse-lite/1.0.30001477:
+    resolution: {integrity: sha512-lZim4iUHhGcy5p+Ri/G7m84hJwncj+Kz7S5aD4hoQfslKZJgt0tHc/hafVbqHC5bbhHb+mrW2JOUHkI5KH7toQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/caniuse-lite/-/caniuse-lite-1.0.30001477.tgz}
     name: caniuse-lite
-    version: 1.0.30001475
+    version: 1.0.30001477
     dev: true
 
   registry.npmmirror.com/chalk/2.4.2:
@@ -2733,6 +2731,7 @@ packages:
     resolution: {integrity: sha512-9vAdYbHj6x2fLKC4+oPH0kFzY/orMZyG2Aj+kNylHxKGJ/Ed4dpNyAQYwJOdqO4zdM7XpVHmyejQDcQHrnuXbw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/consola/-/consola-2.15.3.tgz}
     name: consola
     version: 2.15.3
+    dev: true
 
   registry.npmmirror.com/console-control-strings/1.1.0:
     resolution: {integrity: sha512-ty/fTekppD2fIwRvnZAVdeOiGd1c7YXEixbgJTNzqcxJWKQnjJ/V1bNEEE6hygpM3WjwHFUVK6HTjWSzV4a8sQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/console-control-strings/-/console-control-strings-1.1.0.tgz}
@@ -5650,10 +5649,10 @@ packages:
       yallist: registry.npmmirror.com/yallist/4.0.0
     dev: true
 
-  registry.npmmirror.com/minipass/4.2.5:
-    resolution: {integrity: sha512-+yQl7SX3bIT83Lhb4BVorMAHVuqsskxRdlmO9kTpyukp8vsm2Sn/fUOV9xlnG8/a5JsypJzap21lz/y3FBMJ8Q==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/minipass/-/minipass-4.2.5.tgz}
+  registry.npmmirror.com/minipass/4.2.7:
+    resolution: {integrity: sha512-ScVIgqHcXRMyfflqHmEW0bm8z8rb5McHyOY3ewX9JBgZaR77G7nxq9L/mtV96/QbAAwtbCAHVVLzD1kkyfFQEw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/minipass/-/minipass-4.2.7.tgz}
     name: minipass
-    version: 4.2.5
+    version: 4.2.7
     engines: {node: '>=8'}
     dev: true
 
@@ -5766,7 +5765,7 @@ packages:
       '@rollup/plugin-json': registry.npmmirror.com/@rollup/plugin-json/6.0.0_rollup@3.20.2
       '@rollup/plugin-node-resolve': registry.npmmirror.com/@rollup/plugin-node-resolve/15.0.2_rollup@3.20.2
       '@rollup/plugin-replace': registry.npmmirror.com/@rollup/plugin-replace/5.0.2_rollup@3.20.2
-      '@rollup/plugin-terser': registry.npmmirror.com/@rollup/plugin-terser/0.4.0_rollup@3.20.2
+      '@rollup/plugin-terser': registry.npmmirror.com/@rollup/plugin-terser/0.4.1_rollup@3.20.2
       '@rollup/plugin-wasm': registry.npmmirror.com/@rollup/plugin-wasm/6.1.2_rollup@3.20.2
       '@rollup/pluginutils': registry.npmmirror.com/@rollup/pluginutils/5.0.2_rollup@3.20.2
       '@vercel/nft': registry.npmmirror.com/@vercel/nft/0.22.6
@@ -7697,7 +7696,7 @@ packages:
     dependencies:
       chownr: registry.npmmirror.com/chownr/2.0.0
       fs-minipass: registry.npmmirror.com/fs-minipass/2.1.0
-      minipass: registry.npmmirror.com/minipass/4.2.5
+      minipass: registry.npmmirror.com/minipass/4.2.7
       minizlib: registry.npmmirror.com/minizlib/2.1.2
       mkdirp: registry.npmmirror.com/mkdirp/1.0.4
       yallist: registry.npmmirror.com/yallist/4.0.0

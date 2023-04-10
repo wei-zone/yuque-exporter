@@ -6,7 +6,6 @@
 
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
-import consola from 'consola'
 
 const config: any = {
     baseURL: '/api'
@@ -26,15 +25,14 @@ request.interceptors.response.use(
             return Promise.resolve(res.data)
         }
         if (res.config.responseType) {
-            consola.info('request.res -->', res)
             return Promise.resolve(res)
         }
-        consola.info('request.res -->', res)
+        console.log('request.res -->', res)
         ElMessage.error(res.data?.message || res.statusText || '服务异常，请重试')
         return Promise.reject(res)
     },
     (e: any) => {
-        consola.error('request.e -->', e)
+        console.error('request.e -->', e)
         ElMessage.error(
             e?.response?.data?.message || e?.response?.message || e.message || e.statusText || '服务异常，请重试'
         )

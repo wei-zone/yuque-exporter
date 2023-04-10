@@ -3,7 +3,6 @@
  * @Date: 2022/5/16 21:29
  * @Description: request.ts.js
  */
-import consola from 'consola'
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 
 const config: any = {
@@ -25,7 +24,7 @@ request.interceptors.response.use(
         if (res.status === 200) {
             return Promise.resolve(res.data)
         }
-        consola.info('request.res -->', res)
+        console.log('request.res -->', res)
         return Promise.reject(res)
     },
     (e: any) => {

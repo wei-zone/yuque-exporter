@@ -7,15 +7,17 @@ import { defineEventHandler, getHeaders, getQuery, RequestHeaders, sendStream } 
 import yaml from 'yaml'
 import JSZip from 'jszip'
 import dayjs from 'dayjs'
+import { AxiosResponse } from 'axios'
 import request from '../utils/request'
-import { getImgData, listTransferTree, matchImg, Tree } from '~/server/utils'
+import { getImgData, listTransferTree, matchImg } from '~/server/utils'
+import { IBookCatalog, IDocMap } from '~/types'
 
 /**
  * @desc 获取知识库所有文档
  * @param namespace
  * @param headers
  */
-const getDocList = async (namespace: string, headers: RequestHeaders): Promise<object> => {
+const getDocList = async (namespace: any, headers: RequestHeaders): Promise<any> => {
     // 有知识库名称，获取对应详情数据
     const { data } = await request({
         headers,
@@ -23,11 +25,11 @@ const getDocList = async (namespace: string, headers: RequestHeaders): Promise<o
         method: 'get'
     })
     // 目录列表转成树
-    const docList = yaml.parse(data.toc_yml).filter((item: Tree) => item.type !== 'META')
+    const docList = yaml.parse(data.toc_yml).filter((item: IBookCatalog) => item.type !== 'META')
     // 目录列表转成树
     const docTree = listTransferTree(docList, '')
     return {
-        docList: docList.filter(item => !!item.url),
+        docList: docList.filter((item: IBookCatalog) => !!item.url),
         docTree,
         repoName: data.name
     }
@@ -40,18 +42,18 @@ const getDocList = async (namespace: string, headers: RequestHeaders): Promise<o
  * @param headers
  * @return {Promise<{repoName: string, docMap: T}>}
  */
-const getDocsBody = async (namespace, docs: Tree[], headers) => {
+const getDocsBody = async (namespace: any, docs: IBookCatalog[], headers: RequestHeaders) => {
     try {
         // 所有文档的请求
         const requests = docs
-            .filter(item => item.type === 'DOC' && !!item.url)
-            .map((item: any) => {
+            .filter((item: IBookCatalog) => item.type === 'DOC' && !!item.url)
+            .map((item: IBookCatalog) => {
                 return request(`/repos/${namespace}/docs/${item.url}`, {
                     headers
                 })
             })
         const res = await Promise.all(requests)
-        const docMap = (res || []).reduce((sum, item) => {
+        const docMap: IDocMap = (res || []).reduce((sum, item: AxiosResponse) => {
             const { body, title, id, slug } = item.data
             // toDo 文档内容处理 <a name=""></a>
             // /\<a name=\".*\"\>/gi, '\n'
@@ -80,14 +82,17 @@ const getDocsBody = async (namespace, docs: Tree[], headers) => {
  * @desc 生成文档压缩包
  * @param list
  * @param docMap
+ * @param repoName
  * @param headers
  * @return {Promise<Buffer>}
  */
-const getDocsZip = async (list, docMap: object, headers: RequestHeaders) => {
+const getDocsZip = async (list: IBookCatalog[], docMap: IDocMap, repoName: string, headers: RequestHeaders) => {
     try {
         // jszip初始化
         const zip = new JSZip()
-        await fileZip(zip, list, docMap, headers)
+        // 创建根目录
+        const folder = zip.folder(repoName)
+        await fileZip(folder, list, docMap, headers)
         // 生成压缩内容/必须是generateNodeStream
         return await zip.generateNodeStream({
             type: 'nodebuffer', // nodejs用
@@ -107,7 +112,7 @@ const getDocsZip = async (list, docMap: object, headers: RequestHeaders) => {
  * @param headers
  * @return {Promise<void>}
  */
-const fileZip = async (zip, items, docMap, headers) => {
+const fileZip = async (zip: any, items: IBookCatalog[], docMap: any, headers: RequestHeaders) => {
     for (const item of items || []) {
         const { title, url, type } = item
         // 文档类型节点，有URL
@@ -144,7 +149,7 @@ const fileZip = async (zip, items, docMap, headers) => {
  * @param title
  * @param headers
  */
-const getDocAssets = async (zip, body: string, title: string, headers: RequestHeaders) => {
+const getDocAssets = async (zip: any, body: string, title: any, headers: RequestHeaders) => {
     let realBody = body
     // 匹配markdown中所有的语雀图片cdn地址
     const images = matchImg(body)
@@ -171,11 +176,11 @@ const getDocAssets = async (zip, body: string, title: string, headers: RequestHe
 }
 
 // 导出文档
-const exportDocs = async (namespace: string, headers: RequestHeaders) => {
+const exportDocs = async (namespace: any, headers: RequestHeaders) => {
     try {
         const { docList, docTree, repoName } = await getDocList(namespace, headers)
         const { docMap } = await getDocsBody(namespace, docList, headers)
-        const content = await getDocsZip(docTree || [], docMap, headers)
+        const content = await getDocsZip(docTree || [], docMap, repoName, headers)
         // 将打包的内容写入 当前目录下的 result.zip中
         // fs.writeFileSync(path.join(`${repoName}.zip`), content, 'utf-8')
         return {
@@ -192,7 +197,7 @@ export default defineEventHandler(async event => {
     try {
         const headers: RequestHeaders = getHeaders(event)
         // url知识库路径
-        const { namespace = '' } = getQuery(event)
+        const { namespace } = getQuery(event)
         if (!namespace) {
             return {
                 code: 500,
@@ -218,6 +223,7 @@ export default defineEventHandler(async event => {
             //     event.node.res.end()
             // })
             const fileName = encodeURIComponent(`${repoName}.${dayjs().format('YYYY.MM.DD')}.zip`)
+            // 添加响应头，文件名信息
             event.node.res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
             return sendStream(event, content)
         }

@@ -4,6 +4,9 @@
 ## 使用官方 Node.js 16 轻量级镜像.
 FROM node:16-alpine
 
+ENV NODE_ENV=production
+ENV HOST 0.0.0.0
+
 RUN mkdir -p /usr/src/app
 
 ## 定义工作目录
@@ -17,8 +20,7 @@ COPY package*.json /usr/src/app/
 
 RUN npm i -g pnpm --registry=https://registry.npm.taobao.org
 
-## Install production dependencies.
-## 以 production 形式安装依赖
+## Install dependencies.
 RUN pnpm install --shamefully-hoist
 
 ## 打包
@@ -36,4 +38,4 @@ EXPOSE 3000
 
 ## 2、Run the web service on container startup.
 ## 启动服务
-CMD ["npm", "run", "server"]
+CMD ["npm", "server"]

@@ -47,7 +47,7 @@
                                     <el-link
                                         v-if="data.type === 'DOC'"
                                         type="primary"
-                                        @click="handleExportSingle(data.url)"
+                                        @click="handleExportSingle(data)"
                                     >
                                         导出
                                     </el-link>
@@ -64,46 +64,21 @@
 <script lang="ts" setup>
 import { Download } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import dayjs from 'dayjs'
 import { onBeforeMount, ref } from 'vue'
-import JSZip from 'jszip'
 import pkg from 'file-saver'
-import consola from 'consola'
 import { AxiosResponse } from 'axios'
 import request from '~/plugin/request.app'
+import { IBook, IBookCatalog } from '~/types'
 const saveAs: any = pkg.saveAs
-
-// 知识库
-interface Repo {
-    label: string
-    value: string
-    namespace?: string
-    name?: string
-    children?: Repo[]
-}
-
-// 文档
-interface Doc {
-    id?: number
-    url: string
-    slug?: string
-    date?: string
-    title?: string
-    name?: string
-    address?: string
-    created_at?: string
-    updated_at?: string
-    children?: Doc[]
-}
 
 // 当前知识库路径
 const namespace = ref<string>('')
 // 知识库名称
 const repoName = ref<string>('')
 // 知识库树
-const reposTreeData = ref<Repo[]>([])
+const reposTreeData = ref<IBook[]>([])
 // 知识库文档树
-const docTreeData = ref<Doc[]>([])
+const docTreeData = ref<IBookCatalog[]>([])
 const tableLoading = ref<boolean>(true)
 // 知识库ref
 const repoTreeRef = ref()
@@ -121,7 +96,7 @@ const getReposList = async () => {
             {
                 label: '知识库',
                 value: '',
-                children: data.map((item: Repo) => ({
+                children: data.map((item: IBook) => ({
                     value: item.namespace,
                     label: item.name
                 }))
@@ -160,7 +135,7 @@ const handleExportTree = () => {
     const blob = new Blob([JSON.stringify(docTreeData.value, null, 4)], {
         type: 'application/json'
     })
-    saveAs(blob, `${repoName.value}.${dayjs().format('YYYY.MM.DD')}.json`)
+    saveAs(blob, `${repoName.value}}.json`)
     ElMessage.success('导出成功~')
 }
 
@@ -182,15 +157,7 @@ const handleExportDocs = async () => {
  */
 const downLoadFile = (res: AxiosResponse) => {
     const filename = getFilenameFromResponse(res)
-    const url = window.URL.createObjectURL(new Blob([res.data]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', filename)
-    document.body.appendChild(link)
-    link.click()
-
-    document.body.removeChild(link) // 下载完成移除元素
-    window.URL.revokeObjectURL(url) // 释放掉blob对象
+    saveAs(new Blob([res.data]), filename)
 }
 
 // 获取文件名
@@ -205,48 +172,21 @@ function getFilenameFromResponse(res: AxiosResponse): string {
     return 'download'
 }
 // 单个导出
-const handleExportSingle = (url: string) => {
-    handleExport([url])
-}
-
-// 导出
-const handleExport = async (docs: string[]) => {
+const handleExportSingle = async (data: IBookCatalog) => {
     try {
-        tableLoading.value = true
-        const requests = docs.map((url: string) => {
-            return request(`/docs?url=${url}&namespace=${namespace.value}`)
-        })
-        const res = await Promise.all(requests)
-        fileZip(res)
+        const { url, title } = data
+        const res: any = await request(`/docs?url=${url}&namespace=${namespace.value}`)
+        const blob = new Blob([res.data.body])
+        saveAs(blob, `${title}.md`)
+        ElMessage.success('导出成功~')
     } catch (e) {
-        tableLoading.value = false
+        console.log('handleExportSingle.e', e)
     }
-}
-
-// 压缩文件并导出
-const fileZip = (list: any[]) => {
-    const zip = new JSZip()
-    list.forEach(item => {
-        const { body, title } = item.data
-        zip.file(`${title}.md`, body)
-    })
-    zip.generateAsync({ type: 'blob' })
-        .then(function (content) {
-            // see FileSaver.js
-            saveAs(content, `${repoName.value}.${dayjs().format('YYYY.MM.DD')}.zip`)
-            ElMessage.success('导出成功')
-            tableLoading.value = false
-        })
-        .catch(e => {
-            console.log('export.e', e)
-            ElMessage.warning('导出失败，请重试！')
-            tableLoading.value = false
-        })
 }
 
 onBeforeMount(() => {
     const token = window.localStorage.getItem('yuque_token')
-    consola.info('index', token)
+    console.log('index', token)
     token && getReposList()
 })
 </script>

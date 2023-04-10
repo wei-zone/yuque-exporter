@@ -5,8 +5,9 @@
  */
 import { defineEventHandler, getHeaders, getQuery } from 'h3'
 import yaml from 'yaml'
-import { listTransferTree, Tree } from '../utils'
+import { listTransferTree } from '../utils'
 import request from '../utils/request'
+import { IBookCatalog, IBookDetail } from '~/types'
 
 export default defineEventHandler(async event => {
     try {
@@ -20,10 +21,10 @@ export default defineEventHandler(async event => {
                 method: 'get'
             })
             // 目录列表转成树
-            const repoDetail = {
+            const repoDetail: IBookDetail = {
                 ...data,
                 docTree: listTransferTree(
-                    yaml.parse(data.toc_yml).filter((item: Tree) => item.type !== 'META'),
+                    yaml.parse(data.toc_yml).filter((item: IBookCatalog) => item.type !== 'META'),
                     ''
                 )
             }

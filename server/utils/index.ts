@@ -5,31 +5,12 @@
  */
 import { RequestHeaders } from 'h3'
 import axios from 'axios'
+import { IBookCatalog } from '~/types'
 // 文档库路径
 const docPath = '/docs'
 
 // markdown中语雀图片正则
 const imgReg = /!\[.*?\]\((https:\/\/cdn.*?)\)/g
-
-export interface Tree {
-    type: number | string
-    title: number | string
-    uuid: number | string
-    url?: number | string
-    doc_id?: number | string
-    level?: number | string
-    id?: number | string
-    open_window?: number | string
-    visible?: number | string
-    parent_uuid?: string
-    child_uuid?: string
-    prev_uuid?: string
-    sibling_uuid?: number | string
-    text?: number | string
-    collapsed?: boolean
-    link?: string
-    items?: Tree[]
-}
 
 /**
  * @desc 匹配目标字符串中的图片链接
@@ -45,11 +26,11 @@ const matchImg = function (target: string) {
  * @param parentUuid
  * @param link
  **/
-const listTransferTree = (list: Tree[], parentUuid: string | number, link?: string) => {
-    const res: Tree[] = []
+const listTransferTree = (list: IBookCatalog[], parentUuid: string | number, link?: string) => {
+    const res: IBookCatalog[] = []
     for (const item of list) {
         if (item.parent_uuid === parentUuid) {
-            const children: any = listTransferTree(list, item.uuid, `${link || ''}/${item.title}`)
+            const children: any = listTransferTree(list, item?.uuid || '', `${link || ''}/${item.title}`)
             if (children.length) {
                 item.items = children
                 item.collapsed = false
@@ -59,16 +40,16 @@ const listTransferTree = (list: Tree[], parentUuid: string | number, link?: stri
                     item.items = []
                 }
             }
-            item.url = item.url || item.uuid
-            item.text = item.title
-            delete item.level
-            delete item.doc_id
-            delete item.open_window
-            delete item.visible
-            delete item.prev_uuid
-            delete item.child_uuid
-            delete item.sibling_uuid
-            res.push(item)
+            res.push({
+                id: item.id,
+                type: item.type,
+                title: item.title,
+                text: item.title,
+                url: item.url || item.uuid,
+                link: item.link,
+                collapsed: item.collapsed,
+                items: item.items
+            })
         }
     }
     return res
@@ -87,8 +68,13 @@ const getImgData = async function (src: string, apiHeaders: RequestHeaders) {
             responseType: 'arraybuffer',
             headers
         })
-        const base64Image: any = Buffer.from(res?.data, 'binary').toString('base64')
-        return base64Image
+        // 防止频繁请求
+        return new Promise(resolve => {
+            setTimeout(() => {
+                const base64Image: any = Buffer.from(res?.data, 'binary').toString('base64')
+                resolve(base64Image)
+            }, 300)
+        })
     } catch (e) {
         console.log('getImage.e', e)
         throw e
