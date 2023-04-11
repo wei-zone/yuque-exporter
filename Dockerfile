@@ -28,7 +28,7 @@ RUN pnpm build
 
 ## Copy local code to the container image.
 ## 将本地代码复制到工作目录内
-COPY . /usr/src/app/
+COPY ./.output /usr/src/app/
 
 ## 设置node的时区了 可能时间较长，耐心等待
 # RUN apk update && apk add bash tzdata \ && cp -r -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
@@ -38,4 +38,4 @@ EXPOSE 3000
 
 ## 2、Run the web service on container startup.
 ## 启动服务
-CMD ["npm", "server"]
+CMD ["node", ".output/server/index.mjs"]

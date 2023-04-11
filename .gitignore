@@ -3,6 +3,7 @@ node_modules
 /node_modules
 dist
 .nuxt
+.output
 
 # local env files
 .env.local

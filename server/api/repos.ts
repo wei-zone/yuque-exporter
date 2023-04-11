@@ -20,12 +20,15 @@ export default defineEventHandler(async event => {
                 url: `/repos/${namespace}`,
                 method: 'get'
             })
+            const { toc_yml: toc, slug } = data
+
             // 目录列表转成树
             const repoDetail: IBookDetail = {
                 ...data,
                 docTree: listTransferTree(
-                    yaml.parse(data.toc_yml).filter((item: IBookCatalog) => item.type !== 'META'),
-                    ''
+                    yaml.parse(toc).filter((item: IBookCatalog) => item.type !== 'META'),
+                    '',
+                    '/' + slug
                 )
             }
             delete repoDetail.toc_yml

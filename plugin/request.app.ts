@@ -10,12 +10,12 @@ import { ElMessage } from 'element-plus'
 const config: any = {
     baseURL: '/api'
 }
-const request = axios.create(config)
+const request: any = axios.create(config)
 
 request.interceptors.request.use((config: AxiosRequestConfig | any) => {
     // 添加token
     config.headers['x-auth-token'] = window.localStorage.getItem('yuque_token') || ''
-    console.log(config)
+    console.log('app.url --->', config.url)
     return config
 })
 
@@ -24,12 +24,39 @@ request.interceptors.response.use(
         if (res.status === 200 && res.data.code === 200) {
             return Promise.resolve(res.data)
         }
-        if (res.config.responseType) {
-            return Promise.resolve(res)
-        }
         console.log('request.res -->', res)
-        ElMessage.error(res.data?.message || res.statusText || '服务异常，请重试')
-        return Promise.reject(res)
+        // 文件流类型
+        if (res.config.responseType) {
+            // 文件流错误信息
+            if (res.headers['content-type']?.includes('json')) {
+                // 此处拿到的data才是blob
+                const { data } = res
+                const reader = new FileReader()
+                reader.onload = () => {
+                    const { result } = reader
+                    if (typeof result === 'string') {
+                        res.data = JSON.parse(result)
+                        ElMessage.error(res.data?.message || res.statusText || '服务异常，请重试')
+                        return Promise.reject(res)
+                    } else {
+                        ElMessage.error(res.data?.message || res.statusText || '服务异常，请重试')
+                        return Promise.reject(res)
+                    }
+                }
+                reader.onerror = err => {
+                    res.data = err
+                    ElMessage.error(res.data?.message || res.statusText || '服务异常，请重试')
+                    return Promise.reject(res)
+                }
+                reader.readAsText(data)
+            } else {
+                // 文件流返回
+                return Promise.resolve(res)
+            }
+        } else {
+            ElMessage.error(res.data?.message || res.statusText || '服务异常，请重试')
+            return Promise.reject(res)
+        }
     },
     (e: any) => {
         console.error('request.e -->', e)

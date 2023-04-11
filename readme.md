@@ -1,6 +1,14 @@
 # yuque-exporter
 
-语雀文档批量导出
+> 语雀文档批量导出
+
+## 语雀Api
+
+[语雀Api](https://www.yuque.com/yuque/developer/doc)
+
+示列：获取知识列表
+
+[https://www.yuque.com/api/v2/users/forguo/repos/](https://www.yuque.com/api/v2/users/forguo/repos/)
 
 ## feat
 
@@ -42,4 +50,7 @@ npm run dev
 [语雀token获取](https://www.yuque.com/yuque/developer/api#785a3731)
 
 **这里token权限，勾选读权限即可，你的token只存储在浏览器cookie当中**
+
+
+
 

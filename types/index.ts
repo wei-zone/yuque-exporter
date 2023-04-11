@@ -4,7 +4,7 @@
  * @Description: 类型声明
  */
 
-// 知识库
+// 知识库/列表
 export interface IBook {
     label: string
     value: string
@@ -28,11 +28,11 @@ export interface IBookCatalog {
     prev_uuid?: string
     sibling_uuid?: number | string
     collapsed?: boolean // vitepress sidebar collapsed
-    link?: string
+    link?: string // vitepress sidebar link
     items?: IBookCatalog[]
 }
 
-// 知识库详情
+// 知识库/详情
 export interface IBookDetail {
     label: string
     value: string

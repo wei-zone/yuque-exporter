@@ -22,7 +22,11 @@
             <el-container>
                 <el-main style="display: flex; flex-direction: column">
                     <div class="doc-control">
-                        <el-link type="primary" style="text-align: center; margin-left: 24px" @click="handleExportTree">
+                        <el-link
+                            type="primary"
+                            style="text-align: center; margin-left: 24px"
+                            @click="handleExportRepoToc"
+                        >
                             导出目录
                             <el-icon class="el-icon--right"><Download /></el-icon>
                         </el-link>
@@ -130,27 +134,58 @@ const getReposDetail = async ({ value, label }: { value: string; label: string }
     }
 }
 
+// 单个导出
+const handleExportSingle = async (data: IBookCatalog) => {
+    try {
+        const { title } = data
+        const res: any = await request({
+            url: `/docs`,
+            method: 'post',
+            responseType: 'blob',
+            data: {
+                docList: [data],
+                title,
+                namespace: namespace.value
+            }
+        })
+        downLoadFile(res)
+        ElMessage.success('导出成功~')
+    } catch (e) {
+        console.log('handleExportSingle.e', e)
+    }
+}
+
 // 导出目录
-const handleExportTree = () => {
-    const blob = new Blob([JSON.stringify(docTreeData.value, null, 4)], {
-        type: 'application/json'
-    })
-    saveAs(blob, `${repoName.value}}.json`)
-    ElMessage.success('导出成功~')
+const handleExportRepoToc = () => {
+    try {
+        const blob = new Blob([JSON.stringify(docTreeData.value, null, 4)], {
+            type: 'application/json'
+        })
+        saveAs(blob, `${repoName.value}}.json`)
+        ElMessage.success('导出成功~')
+    } catch (e) {
+        console.log(e)
+        tableLoading.value = false
+    }
 }
 
 // 导出知识库文档
 const handleExportDocs = async () => {
-    if (!namespace.value) {
-        return false
+    try {
+        if (!namespace.value) {
+            return false
+        }
+        tableLoading.value = true
+        const res = await request(`/export?namespace=${namespace.value}`, {
+            responseType: 'blob'
+        })
+        downLoadFile(res)
+        tableLoading.value = false
+        ElMessage.success('导出成功~')
+    } catch (e) {
+        console.log(e)
+        tableLoading.value = false
     }
-    tableLoading.value = true
-    const res = await request(`/export?namespace=${namespace.value}`, {
-        responseType: 'blob'
-    })
-    downLoadFile(res)
-    tableLoading.value = false
-    ElMessage.success('导出成功~')
 }
 /**
  * @description: 文件下载
@@ -171,19 +206,6 @@ function getFilenameFromResponse(res: AxiosResponse): string {
     }
     return 'download'
 }
-// 单个导出
-const handleExportSingle = async (data: IBookCatalog) => {
-    try {
-        const { url, title } = data
-        const res: any = await request(`/docs?url=${url}&namespace=${namespace.value}`)
-        const blob = new Blob([res.data.body])
-        saveAs(blob, `${title}.md`)
-        ElMessage.success('导出成功~')
-    } catch (e) {
-        console.log('handleExportSingle.e', e)
-    }
-}
-
 onBeforeMount(() => {
     const token = window.localStorage.getItem('yuque_token')
     console.log('index', token)
