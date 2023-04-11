@@ -5,9 +5,9 @@ export default defineNuxtConfig({
     typescript: {
         typeCheck: true
     },
+    router: {},
     devServer: {
-        port: 5001,
-        host: '0.0.0.0'
+        port: 3000
     },
     modules: ['@element-plus/nuxt'],
     vite: {

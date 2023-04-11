@@ -33,6 +33,7 @@
 <script lang="ts" setup>
 import { useRouter } from 'nuxt/app'
 import { reactive } from 'vue'
+import { ElMessage } from 'element-plus'
 const router = useRouter()
 
 const form = reactive({
@@ -43,6 +44,10 @@ const form = reactive({
 const login = () => {
     // 保存token到storage
     const token: any = form.token || import.meta.env.VITE_TOKEN || ''
+    if (!token) {
+        ElMessage.warning('token不能为空')
+        return
+    }
     window.localStorage.setItem('yuque_token', token)
     router.push({
         path: '/'

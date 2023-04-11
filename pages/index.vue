@@ -161,7 +161,7 @@ const handleExportRepoToc = () => {
         const blob = new Blob([JSON.stringify(docTreeData.value, null, 4)], {
             type: 'application/json'
         })
-        saveAs(blob, `${repoName.value}}.json`)
+        saveAs(blob, `${repoName.value}.json`)
         ElMessage.success('导出成功~')
     } catch (e) {
         console.log(e)
