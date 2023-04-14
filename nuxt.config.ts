@@ -5,9 +5,8 @@ export default defineNuxtConfig({
     typescript: {
         typeCheck: true
     },
-    router: {},
     devServer: {
-        port: 3000
+        port: 5001
     },
     modules: ['@element-plus/nuxt'],
     vite: {
@@ -19,6 +18,8 @@ export default defineNuxtConfig({
         themes: ['dark']
     },
     app: {
+        // 项目打包目录
+        baseURL: '/yuque',
         head: {
             charset: 'utf-8',
             viewport: 'width=device-width, initial-scale=1',

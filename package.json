@@ -1,7 +1,7 @@
 {
     "private": true,
     "name": "yuque-exporter",
-    "description": "yuque-exporter, 语雀，羽雀文档导出，羽雀导出，羽雀markdown导出，羽雀文档批量导出",
+    "description": "yuque-exporter, 语雀文档导出，语雀文档导出工具, 语雀markdown导出",
     "scripts": {
         "build": "nuxt build",
         "dev": "nuxt dev",

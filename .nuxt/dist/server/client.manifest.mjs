@@ -71,7 +71,7 @@ export default {
       "entry.da4e783a.css"
     ],
     "dynamicImports": [
-      "virtual:nuxt:/Users/benbben/forguo/yuque-exporter/.nuxt/error-component.mjs"
+      "virtual:nuxt:/Users/forguo/work/wei/projects/yuque-exporter/.nuxt/error-component.mjs"
     ],
     "file": "entry.89789010.js",
     "isEntry": true,
@@ -123,7 +123,7 @@ export default {
     "file": "login.cee27ba5.css",
     "resourceType": "style"
   },
-  "virtual:nuxt:/Users/benbben/forguo/yuque-exporter/.nuxt/error-component.mjs": {
+  "virtual:nuxt:/Users/forguo/work/wei/projects/yuque-exporter/.nuxt/error-component.mjs": {
     "resourceType": "script",
     "module": true,
     "dynamicImports": [
@@ -135,6 +135,6 @@ export default {
       "node_modules/.pnpm/registry.npmmirror.com+nuxt@3.3.3_ntigm5zxnpdibkyr63irmrr6ve/node_modules/nuxt/dist/app/entry.js"
     ],
     "isDynamicEntry": true,
-    "src": "virtual:nuxt:/Users/benbben/forguo/yuque-exporter/.nuxt/error-component.mjs"
+    "src": "virtual:nuxt:/Users/forguo/work/wei/projects/yuque-exporter/.nuxt/error-component.mjs"
   }
 }
