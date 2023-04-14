@@ -1,11 +1,11 @@
 const client_manifest = {
-  "_message.1642bb1a.js": {
+  "_message.ea37e746.js": {
     "resourceType": "script",
     "module": true,
     "css": [
       "message.71b6b2e1.css"
     ],
-    "file": "message.1642bb1a.js",
+    "file": "message.ea37e746.js",
     "imports": [
       "node_modules/.pnpm/registry.npmmirror.com+nuxt@3.3.3_ntigm5zxnpdibkyr63irmrr6ve/node_modules/nuxt/dist/app/entry.js"
     ]
@@ -28,7 +28,7 @@ const client_manifest = {
     "resourceType": "script",
     "module": true,
     "css": [],
-    "file": "error-404.96090032.js",
+    "file": "error-404.b2ffc5f2.js",
     "imports": [
       "node_modules/.pnpm/registry.npmmirror.com+nuxt@3.3.3_ntigm5zxnpdibkyr63irmrr6ve/node_modules/nuxt/dist/app/entry.js"
     ],
@@ -48,7 +48,7 @@ const client_manifest = {
     "resourceType": "script",
     "module": true,
     "css": [],
-    "file": "error-500.9a8c94ba.js",
+    "file": "error-500.e362231c.js",
     "imports": [
       "node_modules/.pnpm/registry.npmmirror.com+nuxt@3.3.3_ntigm5zxnpdibkyr63irmrr6ve/node_modules/nuxt/dist/app/entry.js"
     ],
@@ -73,7 +73,7 @@ const client_manifest = {
     "dynamicImports": [
       "virtual:nuxt:/Users/forguo/work/wei/projects/yuque-exporter/.nuxt/error-component.mjs"
     ],
-    "file": "entry.89789010.js",
+    "file": "entry.a1054e93.js",
     "isEntry": true,
     "src": "node_modules/.pnpm/registry.npmmirror.com+nuxt@3.3.3_ntigm5zxnpdibkyr63irmrr6ve/node_modules/nuxt/dist/app/entry.js"
   },
@@ -90,10 +90,10 @@ const client_manifest = {
     "resourceType": "script",
     "module": true,
     "css": [],
-    "file": "index.e45d6ecf.js",
+    "file": "index.86030f84.js",
     "imports": [
       "node_modules/.pnpm/registry.npmmirror.com+nuxt@3.3.3_ntigm5zxnpdibkyr63irmrr6ve/node_modules/nuxt/dist/app/entry.js",
-      "_message.1642bb1a.js"
+      "_message.ea37e746.js"
     ],
     "isDynamicEntry": true,
     "src": "pages/index.vue"
@@ -111,9 +111,9 @@ const client_manifest = {
     "resourceType": "script",
     "module": true,
     "css": [],
-    "file": "login.618f4ed3.js",
+    "file": "login.97ad3afd.js",
     "imports": [
-      "_message.1642bb1a.js",
+      "_message.ea37e746.js",
       "node_modules/.pnpm/registry.npmmirror.com+nuxt@3.3.3_ntigm5zxnpdibkyr63irmrr6ve/node_modules/nuxt/dist/app/entry.js"
     ],
     "isDynamicEntry": true,
@@ -130,7 +130,7 @@ const client_manifest = {
       "node_modules/.pnpm/registry.npmmirror.com+@nuxt+ui-templates@1.1.1/node_modules/@nuxt/ui-templates/dist/templates/error-404.vue",
       "node_modules/.pnpm/registry.npmmirror.com+@nuxt+ui-templates@1.1.1/node_modules/@nuxt/ui-templates/dist/templates/error-500.vue"
     ],
-    "file": "error-component.90c97cee.js",
+    "file": "error-component.77f0fa0f.js",
     "imports": [
       "node_modules/.pnpm/registry.npmmirror.com+nuxt@3.3.3_ntigm5zxnpdibkyr63irmrr6ve/node_modules/nuxt/dist/app/entry.js"
     ],

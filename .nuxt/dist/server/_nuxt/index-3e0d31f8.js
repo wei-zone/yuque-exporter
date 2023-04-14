@@ -2687,9 +2687,11 @@ const checkbox = "";
 const icon = "";
 const divider = "";
 const scrollbar = "";
+const pre = "/yuque/";
 const config = {
-  baseURL: "/api"
+  baseURL: `${pre}api`
 };
+console.log(config);
 const request = axios.create(config);
 request.interceptors.request.use((config2) => {
   config2.headers["x-auth-token"] = window.localStorage.getItem("yuque_token") || "";
@@ -3314,4 +3316,4 @@ _sfc_main.setup = (props, ctx) => {
 export {
   _sfc_main as default
 };
-//# sourceMappingURL=index-5acf838c.js.map
+//# sourceMappingURL=index-3e0d31f8.js.map

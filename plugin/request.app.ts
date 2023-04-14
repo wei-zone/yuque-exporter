@@ -6,10 +6,11 @@
 
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
-
+const pre = import.meta.env.MODE === 'development' ? '/' : '/yuque/'
 const config: any = {
-    baseURL: '/api'
+    baseURL: `${pre}api`
 }
+console.log(config)
 const request: any = axios.create(config)
 
 request.interceptors.request.use((config: AxiosRequestConfig | any) => {

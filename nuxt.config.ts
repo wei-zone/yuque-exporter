@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-
 import eslint from 'vite-plugin-eslint'
+
 export default defineNuxtConfig({
     typescript: {
         typeCheck: true
@@ -19,7 +19,7 @@ export default defineNuxtConfig({
     },
     app: {
         // 项目打包目录
-        baseURL: '/yuque',
+        baseURL: process.env.NODE_ENV === 'development' ? '/' : '/yuque/',
         head: {
             charset: 'utf-8',
             viewport: 'width=device-width, initial-scale=1',
