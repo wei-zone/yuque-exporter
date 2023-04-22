@@ -20,6 +20,7 @@ specifiers:
   remark: ^14.0.2
   sass: ^1.59.3
   typescript: ^5.0.2
+  unist-util-select: ^4.0.3
   vite-plugin-eslint: ^1.8.1
   vue: ^3.2.47
   vue-tsc: ^1.2.0
@@ -34,6 +35,7 @@ dependencies:
   normalize.css: registry.npmmirror.com/normalize.css/8.0.1
   remark: registry.npmmirror.com/remark/14.0.2
   sass: registry.npmmirror.com/sass/1.61.0
+  unist-util-select: registry.npmmirror.com/unist-util-select/4.0.3
   vue: registry.npmmirror.com/vue/3.2.47
   yaml: registry.npmmirror.com/yaml/2.2.1
 
@@ -2375,7 +2377,6 @@ packages:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/boolbase/-/boolbase-1.0.0.tgz}
     name: boolbase
     version: 1.0.0
-    dev: true
 
   registry.npmmirror.com/brace-expansion/1.1.11:
     resolution: {integrity: sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/brace-expansion/-/brace-expansion-1.1.11.tgz}
@@ -2856,6 +2857,12 @@ packages:
       domutils: registry.npmmirror.com/domutils/3.0.1
       nth-check: registry.npmmirror.com/nth-check/2.1.1
     dev: true
+
+  registry.npmmirror.com/css-selector-parser/1.4.1:
+    resolution: {integrity: sha512-HYPSb7y/Z7BNDCOrakL4raGO2zltZkbeXyAd6Tg9obzix6QhzxCotdBl6VT0Dv4vZfJGVz3WL/xaEI9Ly3ul0g==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/css-selector-parser/-/css-selector-parser-1.4.1.tgz}
+    name: css-selector-parser
+    version: 1.4.1
+    dev: false
 
   registry.npmmirror.com/css-tree/2.2.1:
     resolution: {integrity: sha512-OA0mILzGc1kCOCSJerOeqDxDQ4HOh+G8NbOJFOTgOCzpw7fCBubk0fEyxp8AgOL/jvLgYA/uV0cMbe43ElF1JA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/css-tree/-/css-tree-2.2.1.tgz}
@@ -6322,7 +6329,6 @@ packages:
     version: 2.1.1
     dependencies:
       boolbase: registry.npmmirror.com/boolbase/1.0.0
-    dev: true
 
   registry.npmmirror.com/nuxi/3.3.3:
     resolution: {integrity: sha512-j0wp7TS3u9DWxmSY+NHLyu5y4UkbWOhciDdc9uFdrTZKKYl7XYTAR6UoG9fpFEO7624eDqsAE0ASG4tbq6klkg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/nuxi/-/nuxi-3.3.3.tgz}
@@ -8415,6 +8421,17 @@ packages:
     version: 5.2.1
     dependencies:
       '@types/unist': registry.npmmirror.com/@types/unist/2.0.6
+    dev: false
+
+  registry.npmmirror.com/unist-util-select/4.0.3:
+    resolution: {integrity: sha512-1074+K9VyR3NyUz3lgNtHKm7ln+jSZXtLJM4E22uVuoFn88a/Go2pX8dusrt/W+KWH1ncn8jcd8uCQuvXb/fXA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/unist-util-select/-/unist-util-select-4.0.3.tgz}
+    name: unist-util-select
+    version: 4.0.3
+    dependencies:
+      '@types/unist': registry.npmmirror.com/@types/unist/2.0.6
+      css-selector-parser: registry.npmmirror.com/css-selector-parser/1.4.1
+      nth-check: registry.npmmirror.com/nth-check/2.1.1
+      zwitch: registry.npmmirror.com/zwitch/2.0.4
     dev: false
 
   registry.npmmirror.com/unist-util-stringify-position/3.0.3:

@@ -5,7 +5,6 @@
  */
 import { RequestHeaders } from 'h3'
 import { AxiosResponse } from 'axios'
-import { remark } from 'remark'
 import JSZip from 'jszip'
 import { IBookCatalog, IDocMap } from '~/types'
 import request from '~/server/utils/request'
@@ -128,7 +127,7 @@ const getDocAssets = async (zip: any, body: string, title: any, headers: Request
             const imgName = `${title}-${fileName[1]}`
             zip.file(imgName, imgData, { base64: true })
             // 替换原有cdn地址为本地地址
-            realBody = realBody.replace(realImgSrc, `${imgName}`)
+            realBody = realBody.replace(realImgSrc, `${encodeURIComponent(imgName)}`)
         }
     }
     return realBody
@@ -187,7 +186,8 @@ const fileZip = async (zip: any, items: IBookCatalog[], docMap: any, headers: Re
                 try {
                     const realBody = await getDocAssets(zip, body, title, headers)
                     // 保存markdown
-                    zip.file(`${title}.md`, realBody)
+                    // <a name="jpRNc"></a> 替换
+                    zip.file(`${title}.md`, realBody.replace(/<a name="\w+"><\/a>/gi, ''))
                 } catch (e) {
                     console.log('zipFile.e', e)
                     throw e
@@ -232,12 +232,4 @@ const getDocsZip = async (list: IBookCatalog[], docMap: IDocMap, repoName: any, 
     }
 }
 
-/**
- * @desc 文档内容markdown格式化
- * @param docBody
- */
-const reamrkDoc = async (docBody: string) => {
-    return await remark().process(docBody)
-}
-
-export { listTransferTree, getDocsBody, matchImg, getDocAssets, getImgData, reamrkDoc, getDocsZip }
+export { listTransferTree, getDocsBody, matchImg, getDocAssets, getImgData, getDocsZip }

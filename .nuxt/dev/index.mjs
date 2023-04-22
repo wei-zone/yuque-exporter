@@ -753,7 +753,7 @@ const getDocAssets = async (zip, body, title, headers) => {
       const imgData = await getImgData(realImgSrc, headers);
       const imgName = `${title}-${fileName[1]}`;
       zip.file(imgName, imgData, { base64: true });
-      realBody = realBody.replace(realImgSrc, `${imgName}`);
+      realBody = realBody.replace(realImgSrc, `${encodeURIComponent(imgName)}`);
     }
   }
   return realBody;
@@ -793,7 +793,7 @@ const fileZip = async (zip, items, docMap, headers) => {
       if (body) {
         try {
           const realBody = await getDocAssets(zip, body, title, headers);
-          zip.file(`${title}.md`, realBody);
+          zip.file(`${title}.md`, realBody.replace(/<a name="\w+"><\/a>/gi, ""));
         } catch (e) {
           console.log("zipFile.e", e);
           throw e;
