@@ -187,14 +187,13 @@ const fileZip = async (zip: any, items: IBookCatalog[], docMap: any, headers: Re
                     const realBody = await getDocAssets(zip, body, title, headers)
                     // 保存markdown
                     // <a name="jpRNc"></a> 替换
-                    zip.file(`${title}.md`, realBody.replace(/<a name="\w+"><\/a>/gi, ''))
+                    zip.file(`${title}.md`, `# ${title}\n${realBody.replace(/<a name="\w+"><\/a>/gi, '')}`)
                 } catch (e) {
                     console.log('zipFile.e', e)
                     throw e
                 }
             } else {
-                zip.file(`${title}.md`, `## ${title}`)
-                // console.log(docMap[url]?.body || title)
+                zip.file(`${title}.md`, `# ${title}\n`)
             }
         }
         // 递归进行文件压缩
