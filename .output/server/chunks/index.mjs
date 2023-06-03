@@ -167,13 +167,15 @@ const fileZip = async (zip, items, docMap, headers) => {
       if (body) {
         try {
           const realBody = await getDocAssets(zip, body, title, headers);
-          zip.file(`${title}.md`, realBody.replace(/<a name="\w+"><\/a>/gi, ""));
+          zip.file(`${title}.md`, `# ${title}
+${realBody.replace(/<a name="\w+"><\/a>/gi, "")}`);
         } catch (e) {
           console.log("zipFile.e", e);
           throw e;
         }
       } else {
-        zip.file(`${title}.md`, `## ${title}`);
+        zip.file(`${title}.md`, `# ${title}
+`);
       }
     }
     if (item.items && item.items.length) {
