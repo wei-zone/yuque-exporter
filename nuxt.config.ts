@@ -19,7 +19,7 @@ export default defineNuxtConfig({
     },
     app: {
         // 项目打包目录
-        baseURL: process.env.NODE_ENV === 'development' ? '/' : '/yuque/',
+        baseURL: process.env.NODE_ENV === 'development' ? '/' : '/',
         head: {
             charset: 'utf-8',
             viewport: 'width=device-width, initial-scale=1',
