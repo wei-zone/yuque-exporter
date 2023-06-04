@@ -3,7 +3,7 @@
  * @Date: 2023/3/14 20:24
  * @Description: export.ts
  */
-import { defineEventHandler, getHeaders, getQuery, readBody, RequestHeaders, sendStream } from 'h3'
+import { defineEventHandler, getHeaders, getQuery, RequestHeaders, sendStream } from 'h3'
 import yaml from 'yaml'
 import dayjs from 'dayjs'
 import request from '../utils/request'
@@ -63,7 +63,7 @@ export default defineEventHandler(async event => {
             }
         } else {
             const { content, repoName } = await exportDocs(namespace, headers)
-            const fileName = encodeURIComponent(`${repoName}.${dayjs().format('YYYY.MM.DD')}.zip`)
+            const fileName = `${repoName}.${dayjs().format('YYYY.MM.DD')}.zip`
             // 添加响应头，文件名信息
             event.node.res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
             return sendStream(event, content)

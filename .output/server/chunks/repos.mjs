@@ -18,6 +18,7 @@ const repos = defineEventHandler(async (event) => {
       const { toc_yml: toc, slug } = data;
       const repoDetail = {
         ...data,
+        docList: yaml.parse(toc).filter((item) => item.type !== "META"),
         docTree: listTransferTree(
           yaml.parse(toc).filter((item) => item.type !== "META"),
           "",

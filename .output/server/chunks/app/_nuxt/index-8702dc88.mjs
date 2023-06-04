@@ -2689,7 +2689,7 @@ Tree.install = (app) => {
 };
 const _Tree = Tree;
 const ElTree = _Tree;
-const pre = "/yuque/";
+const pre = "/";
 const config = {
   baseURL: `${pre}api`
 };
@@ -3316,4 +3316,4 @@ _sfc_main.setup = (props, ctx) => {
 };
 
 export { _sfc_main as default };
-//# sourceMappingURL=index-3e0d31f8.mjs.map
+//# sourceMappingURL=index-8702dc88.mjs.map

@@ -5,7 +5,7 @@
 [![Docker Deploy](https://github.com/wforguo/yuque-exporter/actions/workflows/docker-image-hub.yml/badge.svg)](https://github.com/wforguo/yuque-exporter/actions/workflows/docker-image-hub.yml)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen?logo=github)](http://commitizen.github.io/cz-cli/)
 
-[快速访问](https://forguo.cn/yuque/)
+[快速访问](https://yuque-exporter.vercel.app)
 
 [Github](https://github.com/wforguo/yuque-exporter)
 
@@ -15,9 +15,11 @@
 
 [语雀](https://www.yuque.com/)是一个不错的笔记与文档知识库，但是最近发现他开始割韭菜了，
 
-知识库的公开开始收费，就想着把内容都导出自己来部署，发现并没有批量操作，amazing，不
+知识库的公开开始收费，就想着把内容都导出自己来部署，发现并没有批量操作，amazing，
 
-过还好有 [api](https://www.yuque.com/yuque/developer/doc) ， 那就来造一个批量导出吧
+不过还好有 [api](https://www.yuque.com/yuque/developer/doc) ， 
+
+那就来造一个批量导出吧
 
 ## 技术栈
 

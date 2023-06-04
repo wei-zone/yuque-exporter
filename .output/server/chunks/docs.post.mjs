@@ -12,7 +12,7 @@ const docs_post = defineEventHandler(async (event) => {
     const { docList, title, namespace } = body;
     const { docMap } = await getDocsBody(namespace, docList, headers);
     const content = await getDocsZip(docList || [], docMap, title, headers);
-    const fileName = encodeURIComponent(`${title}.${dayjs().format("YYYY.MM.DD")}.zip`);
+    const fileName = `${title}.${dayjs().format("YYYY.MM.DD")}.zip`;
     event.node.res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
     return sendStream(event, content);
   } catch (e) {

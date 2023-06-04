@@ -87,8 +87,17 @@ const listTransferTree = (list, parentUuid, bookPath, link) => {
 const getDocsBody = async (namespace, docs, headers) => {
   try {
     const requests = docs.filter((item) => item.type === "DOC" && !!item.url).map((item) => {
-      return request$1(`/repos/${namespace}/docs/${item.url}`, {
-        headers
+      return new Promise((resolve, reject) => {
+        setTimeout(async () => {
+          try {
+            const res2 = await request$1(`/repos/${namespace}/docs/${item.url}`, {
+              headers
+            });
+            resolve(res2);
+          } catch (e) {
+            reject(e);
+          }
+        }, 100);
       });
     });
     const res = await Promise.all(requests);
@@ -127,7 +136,7 @@ const getDocAssets = async (zip, body, title, headers) => {
       const imgData = await getImgData(realImgSrc, headers);
       const imgName = `${title}-${fileName[1]}`;
       zip.file(imgName, imgData, { base64: true });
-      realBody = realBody.replace(realImgSrc, `${encodeURIComponent(imgName)}`);
+      realBody = realBody.replace(realImgSrc, imgName);
     }
   }
   return realBody;
@@ -151,7 +160,7 @@ const getImgData = async function(src, apiHeaders) {
           console.log("Buffer.e", e);
           throw e;
         }
-      }, 300);
+      }, 100);
     });
   } catch (e) {
     console.log("getImage.e", e);

@@ -16,7 +16,7 @@ export default defineEventHandler(async event => {
         const { docMap } = await getDocsBody(namespace, docList, headers)
         const content = await getDocsZip(docList || [], docMap, title, headers)
         // 文件名
-        const fileName = encodeURIComponent(`${title}.${dayjs().format('YYYY.MM.DD')}.zip`)
+        const fileName = `${title}.${dayjs().format('YYYY.MM.DD')}.zip`
         // 添加响应头，文件名信息
         event.node.res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
         return sendStream(event, content)

@@ -47,7 +47,7 @@ const _export = defineEventHandler(async (event) => {
       };
     } else {
       const { content, repoName } = await exportDocs(namespace, headers);
-      const fileName = encodeURIComponent(`${repoName}.${dayjs().format("YYYY.MM.DD")}.zip`);
+      const fileName = `${repoName}.${dayjs().format("YYYY.MM.DD")}.zip`;
       event.node.res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
       return sendStream(event, content);
     }

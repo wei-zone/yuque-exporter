@@ -70,15 +70,23 @@ const getDocsBody = async (namespace: any, docs: IBookCatalog[], headers: Reques
         const requests = docs
             .filter((item: IBookCatalog) => item.type === 'DOC' && !!item.url)
             .map((item: IBookCatalog) => {
-                return request(`/repos/${namespace}/docs/${item.url}`, {
-                    headers
+                // 防止频繁请求
+                return new Promise((resolve, reject) => {
+                    setTimeout(async () => {
+                        try {
+                            const res = await request(`/repos/${namespace}/docs/${item.url}`, {
+                                headers
+                            })
+                            resolve(res)
+                        } catch (e) {
+                            reject(e)
+                        }
+                    }, 100)
                 })
             })
         const res = await Promise.all(requests)
-        const docMap: IDocMap = (res || []).reduce((sum, item: AxiosResponse) => {
+        const docMap: any = (res || []).reduce((sum: any, item: any) => {
             const { body, title, id, slug } = item.data
-            // toDo 文档内容处理 <a name=""></a>
-            // /\<a name=\".*\"\>/gi, '\n'
             const doc = {
                 [slug]: {
                     id,
@@ -127,7 +135,7 @@ const getDocAssets = async (zip: any, body: string, title: any, headers: Request
             const imgName = `${title}-${fileName[1]}`
             zip.file(imgName, imgData, { base64: true })
             // 替换原有cdn地址为本地地址
-            realBody = realBody.replace(realImgSrc, `${encodeURIComponent(imgName)}`)
+            realBody = realBody.replace(realImgSrc, imgName)
         }
     }
     return realBody
@@ -159,7 +167,7 @@ const getImgData = async function (src: string, apiHeaders: RequestHeaders) {
                     console.log('Buffer.e', e)
                     throw e
                 }
-            }, 300)
+            }, 100)
         })
     } catch (e) {
         console.log('getImage.e', e)

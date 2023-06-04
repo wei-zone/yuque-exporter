@@ -6,7 +6,7 @@
 
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
-const pre = import.meta.env.MODE === 'development' ? '/' : '/yuque/'
+const pre = import.meta.env.MODE === 'development' ? '/' : '/'
 const config: any = {
     baseURL: `${pre}api`
 }

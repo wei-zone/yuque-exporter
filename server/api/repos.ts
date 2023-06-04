@@ -25,6 +25,7 @@ export default defineEventHandler(async event => {
             // 目录列表转成树
             const repoDetail: IBookDetail = {
                 ...data,
+                docList: yaml.parse(toc).filter((item: IBookCatalog) => item.type !== 'META'),
                 docTree: listTransferTree(
                     yaml.parse(toc).filter((item: IBookCatalog) => item.type !== 'META'),
                     '',
