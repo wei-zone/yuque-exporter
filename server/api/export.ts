@@ -63,7 +63,7 @@ export default defineEventHandler(async event => {
             }
         } else {
             const { content, repoName } = await exportDocs(namespace, headers)
-            const fileName = `${repoName}.${dayjs().format('YYYY.MM.DD')}.zip`
+            const fileName = encodeURIComponent(`${repoName}.${dayjs().format('YYYY.MM.DD')}.zip`)
             // 添加响应头，文件名信息
             event.node.res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
             return sendStream(event, content)
