@@ -69,7 +69,10 @@ const getDocsBody = async (namespace: any, docs: IBookCatalog[], headers: Reques
         // 所有文档的请求
         const requests = docs
             .filter((item: IBookCatalog) => item.type === 'DOC' && !!item.url)
-            .map((item: IBookCatalog) => {
+            .map((item: IBookCatalog, index: number) => {
+                const groupIndex = Math.floor(index / 20) + 1
+                const delay = groupIndex * 1000.0
+
                 // 防止频繁请求
                 return new Promise((resolve, reject) => {
                     setTimeout(async () => {
@@ -81,7 +84,7 @@ const getDocsBody = async (namespace: any, docs: IBookCatalog[], headers: Reques
                         } catch (e) {
                             reject(e)
                         }
-                    }, 100)
+                    }, delay)
                 })
             })
         const res = await Promise.all(requests)
